@@ -1,4 +1,4 @@
-title = "rhoai-maas-showroom gitleaks config"
+title = "rhoai-showroom gitleaks config"
 
 [allowlist]
 description = "Workshop-only Postgres and MinIO credentials in manifests"

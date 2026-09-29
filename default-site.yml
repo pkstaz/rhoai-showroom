@@ -1,7 +1,7 @@
 ---
 site:
-  title: OpenShift AI 3.5 — Models as a Service
-  url: https://pkstaz.github.io/rhoai-maas-showroom
+  title: OpenShift AI 3.5
+  url: https://pkstaz.github.io/rhoai-showroom
   start_page: modules::00-00-intro.adoc
 
 content:

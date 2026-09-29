@@ -1,12 +1,12 @@
 name: modules
-title: OpenShift AI 3.5 — Models as a Service
+title: OpenShift AI 3.5
 version: master
 nav:
   - modules/ROOT/nav.adoc
 
 asciidoc:
   attributes:
-    lab_name: "OpenShift AI 3.5 — Models as a Service"
+    lab_name: "OpenShift AI 3.5"
     release-version: master
     page-pagination: true
     rhoai-version: "3.5.1"

@@ -75,8 +75,8 @@ Clona el repo en esta terminal:
 
 [source,bash]
 ----
-git clone https://github.com/pkstaz/rhoai-maas-showroom.git
-cd rhoai-maas-showroom
+git clone https://github.com/pkstaz/rhoai-showroom.git
+cd rhoai-showroom
 ----
 
 Los `oc apply -f manifests/...` de los módulos siguientes se ejecutan desde ese directorio.
