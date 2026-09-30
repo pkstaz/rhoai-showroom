@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Install MaaS observability stack (Tempo, OpenTelemetry, COO, Loki + usage dashboards).
+# Install MaaS observability stack (user-workload monitoring, Tempo, OpenTelemetry,
+# COO, Loki + usage dashboards).
 # Based on: https://rh-aiservices-bu.github.io/rhoai-maas-guide/modules/main/07-observability.html
 set -euo pipefail
 
@@ -31,6 +32,18 @@ wait_csv() {
   oc get csv -n "${ns}" || true
   return 1
 }
+
+echo "=== 0. Monitoreo user-workload (pre-requisito, modulo 2) ==="
+# RHOAI (dashboard, workbenches, serving) y Kueue publican metricas en el
+# segundo plano de monitoreo; sin enableUserWorkload no hay datos en Usage.
+oc apply -f manifests/cluster-monitoring-config.yaml
+for i in $(seq 1 36); do
+  n=$(oc get pods -n openshift-user-workload-monitoring --no-headers 2>/dev/null \
+    | grep -c Running || true)
+  [[ "$n" -ge 2 ]] && { echo "user-workload-monitoring: ${n} pods Running"; break; }
+  echo "esperando pods user-workload-monitoring (Running=${n:-0}, try $i)"
+  sleep 10
+done
 
 echo "=== 1. Tempo Operator ==="
 oc apply -k "${OBS}/tempo"

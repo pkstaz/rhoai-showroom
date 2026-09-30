@@ -31,7 +31,7 @@ Run `oc apply` / scripts from the **repo root**.
 | `fix-maas-usage-user-label.sh` | Usage UI user label |
 | `fix-playground-maas.sh` | Playground API key + max_tokens |
 | `observability/` | Tempo, OTEL, COO, Loki, MinIO (module 11) |
-| `apply-maas-observability.sh` | Observability stack installer |
+| `apply-maas-observability.sh` | Observability stack installer (user-workload monitoring + Tempo + OTEL + COO + Loki + usage) |
 | `evalhub/` | EvalHub + MLflow + Garak/ART providers (modules 12–12.1) |
 | `apply-evalhub.sh` | TrustyAI + MLflow + EvalHub |
 | `apply-garak.sh` | Enable Garak + `garak-kfp`; `SUBMIT=1` smoke `quick`; `MODE=art` Chatterbox |
