@@ -6,11 +6,48 @@ Orden:
 . Gateway `maas-default-gateway`
 . `aigateway.modelsAsAService: Managed` en el DSC
 
+== Todo en uno
+
+Un script resuelve el módulo completo en orden: operador de Connectivity Link si falta, GatewayClass + Istio, Kuadrant, Postgres, Gateway y `modelsAsAService: Managed` en el DSC. Es idempotente: se puede re-ejecutar.
+
+[source,bash]
+----
+bash manifests/apply-maas.sh
+----
+
+Con el operador ya instalado (xref:02-00-operators.adoc[módulo 2]):
+
+[source,bash]
+----
+bash manifests/apply-maas.sh --skip-operator
+----
+
+=== Desde otros proyectos
+
+Clona este repo y ejecuta el script contra el cluster donde ya hiciste `oc login`:
+
+[source,bash]
+----
+git clone git@github.com:pkstaz/rhoai-showroom.git
+bash rhoai-showroom/manifests/apply-maas.sh --skip-operator
+----
+
+=== GitOps
+
+La parte declarativa está lista para GitOps como bundle kustomize (GatewayClass, Kuadrant y Postgres):
+
+[source,bash]
+----
+oc apply -k manifests/maas
+----
+
+El Gateway y el patch del DSC dependen de valores del cluster (dominio, certificado, nombre del DSC), por eso los maneja el script; en un repo GitOps pasarían a ser valores parametrizados (kustomize `replacements` o parches).
+
 == 1. Base de datos
 
 [source,bash]
 ----
-oc apply -f manifests/maas-postgres.yaml
+oc apply -f manifests/maas/maas-postgres.yaml
 oc get pods -n redhat-ai-gateway-infra
 ----
 

@@ -176,20 +176,20 @@ Order is mandatory:
 
 1. GatewayClass, wait Istio:
    ```bash
-   oc apply -f manifests/gatewayclass.yaml
+   oc apply -f manifests/maas/gatewayclass.yaml
    oc wait --for=condition=Accepted gatewayclass/openshift-default --timeout=2m
    oc rollout status -n openshift-ingress deploy/istiod-openshift-gateway --timeout=5m
    ```
 2. Kuadrant **only after** Istio is ready:
    ```bash
    oc create namespace kuadrant-system --dry-run=client -o yaml | oc apply -f -
-   oc apply -f manifests/kuadrant.yaml
+   oc apply -f manifests/maas/kuadrant.yaml
    oc wait kuadrant/kuadrant -n kuadrant-system --for=condition=Ready --timeout=5m
    ```
    If Kuadrant says Gateway API provider is missing, restart the Kuadrant controller (see `content/modules/ROOT/pages/04-00-connectivity.adoc`).
 3. Postgres:
    ```bash
-   oc apply -f manifests/maas-postgres.yaml
+   oc apply -f manifests/maas/maas-postgres.yaml
    oc wait -n redhat-ai-gateway-infra --for=condition=available deploy/maas-postgres --timeout=300s
    ```
 4. Gateway:

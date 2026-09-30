@@ -8,12 +8,11 @@ Run `oc apply` / scripts from the **repo root**.
 | `operators/` | Prerequisite operators (module 2), one directory per Operator
 | `cluster-monitoring-config.yaml` | User-workload monitoring (module 2) |
 | `oauth-htpasswd.yaml` | Optional OAuth htpasswd patch |
-| `gatewayclass.yaml` | GatewayClass (module 4) |
-| `kuadrant.yaml` | Kuadrant instance (module 4) |
+| `maas/` | MaaS infra bundle: GatewayClass, Kuadrant, Postgres + kustomization GitOps (`oc apply -k maas`) (module 4) |
+| `apply-maas.sh` | MaaS end-to-end installer (operator + connectivity + postgres + gateway + DSC) |
 | `rhoai-operator.yaml` | RHOAI Operator |
 | `default-dsc.yaml` | DataScienceCluster |
 | `odh-dashboard-config-patch.yaml` | Dashboard flags |
-| `maas-postgres.yaml` | MaaS Postgres |
 | `apply-maas-gateway.sh` | MaaS Gateway |
 | `model-catalog-qwen.yaml` | Model Catalog (HF) |
 | `fake-gpu-values.yaml` | Fake GPU topology |

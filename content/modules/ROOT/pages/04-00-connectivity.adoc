@@ -15,7 +15,7 @@ Sin este paso no hay provider de Gateway API listo; Kuadrant no podrá enganchar
 
 [source,bash]
 ----
-oc apply -f manifests/gatewayclass.yaml
+oc apply -f manifests/maas/gatewayclass.yaml
 ----
 
 === Esperar Istio (antes de Kuadrant)
@@ -65,7 +65,7 @@ spec:
 [source,bash]
 ----
 oc create namespace kuadrant-system
-oc apply -f manifests/kuadrant.yaml
+oc apply -f manifests/maas/kuadrant.yaml
 oc wait kuadrant/kuadrant -n kuadrant-system --for=condition=Ready --timeout=5m
 ----
 
