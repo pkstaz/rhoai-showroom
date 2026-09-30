@@ -2,7 +2,8 @@
 # Habilitar MaaS (modulo 4) end-to-end:
 #   operadores pre-requisito (Connectivity Link, Leader Worker Set) si faltan
 #   -> GatewayClass + Istio -> Kuadrant -> Postgres + maas-db-config
-#   -> Gateway maas-default-gateway -> modelsAsAService: Managed en el DSC.
+#   -> Gateway maas-default-gateway -> modelsAsAService: Managed en el DSC
+#   -> auto-fix Authorino (service CA + gRPC TLS) + smoke test /maas-api.
 #
 # Uso desde otro proyecto (con oc login ya hecho en el cluster):
 #   git clone git@github.com:pkstaz/rhoai-showroom.git
@@ -108,9 +109,60 @@ oc patch "$DSC" --type merge -p '{
 oc wait --for=condition=Ready "$DSC" --timeout=15m || \
   echo "DSC aun no Ready; revisa los pods (el despliegue de MaaS tarda)"
 
+# --- 6. Salud maas-api + auto-fix Authorino ------------------------------------
+# Sin gRPC TLS alineado, POST /maas-api/v1/api-keys devuelve texto plano
+# ("Internal Server Error") y el dashboard falla con:
+#   - API Key:   unmarshall: invalid character 'I' looking for beginning of value
+#   - AI Assets: Models as a Service could not be loaded. Only models from
+#                available sources are shown.
+# Causa: Envoy habla TLS con Authorino :50051 y el listener esta en plaintext
+# (ademas falta el service CA para que Authorino valide maas-api HTTPS).
+echo "=== maas-api / maas-controller (redhat-ods-applications) ==="
+oc wait -n redhat-ods-applications --for=condition=Available deploy/maas-api --timeout=10m || true
+oc wait -n redhat-ods-applications --for=condition=Available deploy/maas-controller --timeout=10m || true
+
+CLUSTER_DOMAIN=$(oc get ingresses.config/cluster -o jsonpath='{.spec.domain}')
+
+maas_api_check() {
+  curl -sk -X POST "https://maas.${CLUSTER_DOMAIN}/maas-api/v1/api-keys" \
+    -H "Authorization: Bearer $(oc whoami -t)" \
+    -H "Content-Type: application/json" \
+    -d '{"name":"maas-install-check","expiresIn":"1h"}' 2>/dev/null
+}
+
+apply_authorino_fixes() {
+  echo "=== Auto-fix Authorino: service CA + gRPC TLS ==="
+  bash manifests/fix-maas-authorino-ca.sh
+  bash manifests/fix-maas-authorino-grpc-tls.sh
+}
+
+if oc get authorino authorino -n kuadrant-system >/dev/null 2>&1; then
+  apply_authorino_fixes
+else
+  echo "WARN: authorino/authorino no existe en kuadrant-system; sin auto-fix"
+fi
+
+echo "=== Smoke test: POST https://maas.${CLUSTER_DOMAIN}/maas-api/v1/api-keys ==="
+RESP=$(maas_api_check || true)
+if echo "$RESP" | jq -e . >/dev/null 2>&1; then
+  echo "OK: maas-api responde JSON (Authorino gRPC alineado)"
+else
+  echo "WARN: respuesta no JSON: ${RESP:0:120}"
+  echo "Reintento: re-aplicando fixes de Authorino..."
+  apply_authorino_fixes
+  sleep 10
+  RESP=$(maas_api_check || true)
+  if echo "$RESP" | jq -e . >/dev/null 2>&1; then
+    echo "OK: maas-api responde JSON tras re-aplicar fixes"
+  else
+    echo "ERROR: maas-api sigue devolviendo no-JSON:"
+    echo "${RESP:0:200}"
+    exit 1
+  fi
+fi
+
 # --- Verificacion ---------------------------------------------------------------
 echo "=== Verificacion ==="
-CLUSTER_DOMAIN=$(oc get ingresses.config/cluster -o jsonpath='{.spec.domain}')
 printf '%-30s %s\n' "DSC" "$DSC"
 oc get "$DSC"
 printf '%-30s %s\n' "MaaS API" "https://maas.${CLUSTER_DOMAIN}"
@@ -119,4 +171,4 @@ oc get pods -n redhat-ods-applications | grep -i maas || \
   echo "(aun no hay pods maas en redhat-ods-applications)"
 oc get aitenant -A
 oc get maastenantconfig -A
-echo "Listo: maas-api / maas-controller en Running."
+echo "Listo: maas-api / maas-controller en Running y /maas-api responde JSON."

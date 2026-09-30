@@ -103,3 +103,31 @@ oc get maastenantconfig -A
 ----
 
 `maas-api` / `maas-controller` en `Running`.
+
+== Auto-fix Authorino
+
+Sin gRPC TLS alineado, la UI de *API Keys* y *AI Assets* fallan:
+
+[source]
+----
+unknown error when invoking maas-api (unmarshall): invalid character 'I' looking for beginning of value
+Models as a Service could not be loaded. Only models from available sources are shown.
+----
+
+Causa: Envoy habla TLS con Authorino `:50051` mientras el listener está en plaintext (y falta el service CA para validar `maas-api` HTTPS). El script `apply-maas.sh` lo detecta y corrige al final (re-ejecutándolo aplica los fixes de nuevo). Manualmente:
+
+[source,bash]
+----
+bash manifests/fix-maas-authorino-ca.sh
+bash manifests/fix-maas-authorino-grpc-tls.sh
+----
+
+Smoke test (respuesta JSON = transporte OK; sin subscription de xref:09-00-subscription.adoc[módulo 9] puede devolver error JSON, y es válido aquí):
+
+[source,bash]
+----
+curl -sk -X POST "https://maas.$(oc get ingresses.config/cluster -o jsonpath='{.spec.domain}')/maas-api/v1/api-keys" \
+  -H "Authorization: Bearer $(oc whoami -t)" \
+  -H "Content-Type: application/json" \
+  -d '{"name":"check","expiresIn":"1h"}'
+----
