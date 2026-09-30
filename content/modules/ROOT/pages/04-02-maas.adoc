@@ -8,7 +8,7 @@ Orden:
 
 == Todo en uno
 
-Un script resuelve el módulo completo en orden: operador de Connectivity Link si falta, GatewayClass + Istio, Kuadrant, Postgres, Gateway y `modelsAsAService: Managed` en el DSC. Es idempotente: se puede re-ejecutar.
+Un script resuelve el módulo completo en orden: operadores pre-requisito si faltan (Connectivity Link y Leader Worker Set), GatewayClass + Istio, Kuadrant, Postgres, Gateway y `modelsAsAService: Managed` en el DSC. Es idempotente: se puede re-ejecutar.
 
 [source,bash]
 ----

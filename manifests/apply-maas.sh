@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # Habilitar MaaS (modulo 4) end-to-end:
-#   operador Connectivity Link (si falta) -> GatewayClass + Istio -> Kuadrant
-#   -> Postgres + maas-db-config -> Gateway maas-default-gateway
-#   -> modelsAsAService: Managed en el DSC.
+#   operadores pre-requisito (Connectivity Link, Leader Worker Set) si faltan
+#   -> GatewayClass + Istio -> Kuadrant -> Postgres + maas-db-config
+#   -> Gateway maas-default-gateway -> modelsAsAService: Managed en el DSC.
 #
 # Uso desde otro proyecto (con oc login ya hecho en el cluster):
 #   git clone git@github.com:pkstaz/rhoai-showroom.git
 #   bash rhoai-showroom/manifests/apply-maas.sh
 #
 # Flags:
-#   --skip-operator   El Operator de Connectivity Link ya esta instalado (modulo 2)
+#   --skip-operator   Operadores pre-requisito ya instalados (modulo 2)
 #
 # Idempotente: se puede re-ejecutar. Los manifiestos declarativos de este repo
 # son la fuente de verdad lista para GitOps:
@@ -26,26 +26,41 @@ SKIP_OPERATOR=0
 
 oc whoami >/dev/null 2>&1 || { echo "ERROR: no hay sesion de cluster (oc login)"; exit 1; }
 
-# --- 0. Operator de Connectivity Link (pre-requisito, modulo 2) -------------
-if [[ $SKIP_OPERATOR -eq 0 ]]; then
-  CSV=$(oc get csv -n openshift-operators --no-headers 2>/dev/null \
-    | grep -i connectivity | awk '{print $1}' | head -1 || true)
-  if [[ -z "$CSV" ]]; then
-    echo "=== Operator de Connectivity Link ==="
-    oc apply -f manifests/operators/connectivity-link/subscription.yaml
-  else
-    echo "=== Operator de Connectivity Link ($CSV ya instalado) ==="
-  fi
+# Espera a que el CSV que matchee el pattern quede Succeeded.
+wait_csv_succeeded() {
+  local pattern="$1" ns="$2" csv="" phase=""
   for i in $(seq 1 60); do
-    CSV=$(oc get csv -n openshift-operators --no-headers 2>/dev/null \
-      | grep -i connectivity | awk '{print $1}' | head -1 || true)
-    [[ -z "$CSV" ]] && { echo "esperando CSV del operador (try $i)"; sleep 10; continue; }
-    PHASE=$(oc get csv "$CSV" -n openshift-operators -o jsonpath='{.status.phase}')
-    [[ "$PHASE" == "Succeeded" ]] && { echo "CSV $CSV: Succeeded"; break; }
-    echo "CSV $CSV: $PHASE (try $i)"
+    csv=$(oc get csv -n "$ns" --no-headers 2>/dev/null \
+      | grep -i "$pattern" | awk '{print $1}' | head -1 || true)
+    [[ -z "$csv" ]] && { echo "esperando CSV ($pattern) en $ns (try $i)"; sleep 10; continue; }
+    phase=$(oc get csv "$csv" -n "$ns" -o jsonpath='{.status.phase}')
+    [[ "$phase" == "Succeeded" ]] && { echo "CSV $csv: Succeeded"; return 0; }
+    echo "CSV $csv: $phase (try $i)"
     sleep 10
   done
-  [[ -n "$CSV" && "$PHASE" == "Succeeded" ]] || { echo "ERROR: el operador no quedo Succeeded"; exit 1; }
+  echo "ERROR: CSV $pattern no quedo Succeeded en $ns"; return 1
+}
+
+# Instala un operador (subscription YAML) si ningun CSV lo cubre ya.
+ensure_operator() {
+  local label="$1" pattern="$2" ns="$3" yaml="$4" csv=""
+  csv=$(oc get csv -n "$ns" --no-headers 2>/dev/null \
+    | grep -i "$pattern" | awk '{print $1}' | head -1 || true)
+  if [[ -z "$csv" ]]; then
+    echo "=== Operator $label ==="
+    oc apply -f "$yaml"
+  else
+    echo "=== Operator $label ($csv ya instalado) ==="
+  fi
+  wait_csv_succeeded "$pattern" "$ns"
+}
+
+# --- 0. Operadores pre-requisito (modulo 2) ----------------------------------
+if [[ $SKIP_OPERATOR -eq 0 ]]; then
+  ensure_operator "Connectivity Link" connectivity openshift-operators \
+    manifests/operators/connectivity-link/subscription.yaml
+  ensure_operator "Leader Worker Set" leader-worker openshift-lws-operator \
+    manifests/operators/leader-worker-set/subscription.yaml
 fi
 
 # --- 1. GatewayClass + Istio (data plane) ------------------------------------
