@@ -76,12 +76,48 @@ echo "=== 6. Loki Operator ==="
 oc apply -k "${OBS}/loki"
 wait_csv openshift-operators-redhat 'loki-operator' 300
 
+# CRDs del Loki Operator: el CSV queda Succeeded antes de que los CRDs esten
+# Established; sin lokistacks.loki.grafana.com el apply del paso 7 falla.
+echo "Waiting for CRD lokistacks.loki.grafana.com (Established)..."
+for i in $(seq 1 60); do
+  oc get crd lokistacks.loki.grafana.com \
+    -o jsonpath='{.status.conditions[?(@.type=="Established")].status}' 2>/dev/null \
+    | grep -q True && break
+  sleep 5
+done
+oc get crd lokistacks.loki.grafana.com >/dev/null 2>&1 || {
+  echo "ERROR: CRD lokistacks.loki.grafana.com no existe (Loki Operator sin CRDs)"; exit 1; }
+
 echo "=== 7. MinIO + LokiStack (usage dashboards) ==="
-oc apply -k "${OBS}/usage-logging"
+# El primer apply puede chocar con CRDs recien establecidos; reintenta hasta
+# que el CR LokiStack exista.
+oc apply -k "${OBS}/usage-logging" || true
+for i in 1 2 3 4 5 6; do
+  oc get lokistack usage -n redhat-ods-monitoring >/dev/null 2>&1 && break
+  echo "LokiStack usage no creado (try $i); re-aplicando..."
+  sleep 10
+  oc apply -k "${OBS}/usage-logging" || true
+done
+oc get lokistack usage -n redhat-ods-monitoring >/dev/null || {
+  echo "ERROR: LokiStack usage no se creo; revisa:"; \
+  echo "  oc get crd lokistacks.loki.grafana.com"; \
+  echo "  oc get csv -n openshift-operators-redhat | grep loki"; exit 1; }
+
+# StorageClass gp3-csi es del OpenTLC; en otro cluster cae al default.
+if ! oc get storageclass gp3-csi >/dev/null 2>&1; then
+  DEFAULT_SC=$(oc get storageclass -o jsonpath='{range .items[?(@.metadata.annotations.storageclass\.kubernetes\.io/is-default-class=="true")]}{.metadata.name}{end}')
+  if [[ -n "$DEFAULT_SC" && "$DEFAULT_SC" != "gp3-csi" ]]; then
+    echo "gp3-csi no existe; usando StorageClass default ${DEFAULT_SC}"
+    oc patch lokistack usage -n redhat-ods-monitoring --type=merge \
+      -p "{\"spec\":{\"storageClassName\":\"${DEFAULT_SC}\"}}"
+  fi
+fi
+
 oc wait --for=condition=available deployment/minio -n redhat-ods-monitoring --timeout=300s
 oc wait job/minio-create-bucket -n redhat-ods-monitoring --for=condition=complete --timeout=300s || true
 oc wait lokistack/usage -n redhat-ods-monitoring \
-  --for=jsonpath='{.status.conditions[?(@.type=="Ready")].status}'=True --timeout=600s || true
+  --for=jsonpath='{.status.conditions[?(@.type=="Ready")].status}'=True --timeout=600s || \
+  echo "WARN: LokiStack usage no Ready; revisa 'oc get lokistack usage -n redhat-ods-monitoring -o yaml' y sus events"
 
 echo "=== 8. Enable usageLogging ==="
 oc patch configs.maas.opendatahub.io default --type=merge \
