@@ -131,9 +131,57 @@ maas_api_check() {
 }
 
 apply_authorino_fixes() {
-  echo "=== Auto-fix Authorino: service CA + gRPC TLS ==="
-  bash manifests/fix-maas-authorino-ca.sh
-  bash manifests/fix-maas-authorino-grpc-tls.sh
+  local NS="${AUTHORINO_NAMESPACE:-kuadrant-system}"
+  local NAME="${AUTHORINO_NAME:-authorino}"
+
+  echo "=== Auto-fix Authorino: service CA + gRPC TLS (${NS}/${NAME}) ==="
+
+  # CA: monta el service-CA para que Authorino valide maas-api HTTPS (:8443).
+  # Sin esto, /v1/models y chat responden AUTH_FAILURE.
+  oc patch authorino "${NAME}" -n "${NS}" --type=merge -p '{
+    "spec": {
+      "volumes": {
+        "defaultMode": 420,
+        "items": [
+          {
+            "name": "openshift-service-ca",
+            "mountPath": "/etc/pki/tls/certs/maas-ca",
+            "configMaps": ["openshift-service-ca.crt"]
+          }
+        ]
+      }
+    }
+  }'
+  oc set env "deploy/${NAME}" -n "${NS}" \
+    SSL_CERT_DIR=/etc/ssl/certs:/etc/pki/tls/certs:/etc/pki/tls/certs/maas-ca
+  oc rollout status "deploy/${NAME}" -n "${NS}" --timeout=120s
+
+  # gRPC TLS: el EnvoyFilter openshift-ai-inference-authn-ssl hace que el wasm
+  # hable TLS con Authorino :50051; el listener debe quedar en TLS tambien.
+  # DestinationRule tls.mode=DISABLE y MERGE->raw_buffer NO lo arreglan.
+  oc annotate svc authorino-authorino-authorization -n "${NS}" \
+    "service.beta.openshift.io/serving-cert-secret-name=authorino-server-cert" --overwrite
+  for _ in $(seq 1 30); do
+    oc get secret authorino-server-cert -n "${NS}" >/dev/null 2>&1 && break
+    sleep 2
+  done
+  oc get secret authorino-server-cert -n "${NS}" >/dev/null
+  oc patch authorino "${NAME}" -n "${NS}" --type=merge -p '{
+    "spec": {
+      "listener": {
+        "tls": {
+          "enabled": true,
+          "certSecretRef": { "name": "authorino-server-cert" }
+        }
+      }
+    }
+  }'
+  oc rollout status "deploy/${NAME}" -n "${NS}" --timeout=180s
+
+  # Reinicio del gateway para que Envoy reconecte el gRPC con Authorino.
+  oc delete pod -n openshift-ingress \
+    -l gateway.networking.k8s.io/gateway-name=maas-default-gateway --ignore-not-found
+  oc rollout status -n openshift-ingress deploy/maas-default-gateway-openshift-default --timeout=180s
 }
 
 if oc get authorino authorino -n kuadrant-system >/dev/null 2>&1; then

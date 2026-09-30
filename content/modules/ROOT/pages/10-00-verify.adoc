@@ -4,20 +4,12 @@ El modelo en MaaS se llama con API key.
 
 == Prerrequisito: Authorino
 
-Dos fallos distintos:
+El script `apply-maas.sh` aplica los fixes de Authorino al final (service CA + gRPC TLS). Dos fallos conocidos, corregidos por ese paso:
 
-* `/v1/models` o el chat responden `AUTH_FAILURE` / `Exception thrown while generating token` con una API key válida → Authorino no confía en el TLS de `maas-api`. Monta el service-CA:
-+
-[source,bash]
-----
-bash manifests/fix-maas-authorino-ca.sh
-----
-* `POST /maas-api/v1/api-keys` devuelve *HTTP 500* (Envoy `kuadrant-auth-service` gRPC not OK) → el EnvoyFilter `openshift-ai-inference-authn-ssl` habla TLS a Authorino `:50051` y el listener de Authorino está en plaintext. No intentes quitar el TLS con DestinationRule. Activa TLS en Authorino y reinicia el gateway:
-+
-[source,bash]
-----
-bash manifests/fix-maas-authorino-grpc-tls.sh
-----
+* `/v1/models` o el chat responden `AUTH_FAILURE` / `Exception thrown while generating token` con una API key válida → Authorino no confía en el TLS de `maas-api` (service CA).
+* `POST /maas-api/v1/api-keys` devuelve *HTTP 500* y el dashboard falla con `unmarshall: invalid character 'I'` → el EnvoyFilter `openshift-ai-inference-authn-ssl` habla TLS a Authorino `:50051` y el listener de Authorino está en plaintext. No intentes quitar el TLS con DestinationRule.
+
+Si reaparecen (p. ej. el gateway se regenera), re-ejecuta `bash manifests/apply-maas.sh` (idempotente; vuelve a aplicar los fixes y el smoke test).
 
 == API key
 

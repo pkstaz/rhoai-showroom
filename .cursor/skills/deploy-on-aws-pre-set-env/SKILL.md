@@ -289,14 +289,10 @@ Wait both `MaaSModelRef` **Ready**. Subscriptions: `qwen-authenticated` and `gpt
 Never print full API keys (`sk-oai-…`) in user-facing replies.
 
 ```bash
-bash manifests/fix-maas-authorino-ca.sh
+bash manifests/apply-maas.sh
 ```
 
-If `POST /maas-api/v1/api-keys` returns **HTTP 500** (not AUTH_FAILURE), Authorino gRPC TLS is mismatched. Run:
-
-```bash
-bash manifests/fix-maas-authorino-grpc-tls.sh
-```
+`apply-maas.sh` applies the Authorino fixes (service CA + gRPC TLS) and a smoke test at the end. If `POST /maas-api/v1/api-keys` returns **HTTP 500**, re-run it (idempotent).
 
 Then create keys for `qwen-authenticated` and `gpt-oss-20b-authenticated`.
 

@@ -114,13 +114,7 @@ unknown error when invoking maas-api (unmarshall): invalid character 'I' looking
 Models as a Service could not be loaded. Only models from available sources are shown.
 ----
 
-Causa: Envoy habla TLS con Authorino `:50051` mientras el listener está en plaintext (y falta el service CA para validar `maas-api` HTTPS). El script `apply-maas.sh` lo detecta y corrige al final (re-ejecutándolo aplica los fixes de nuevo). Manualmente:
-
-[source,bash]
-----
-bash manifests/fix-maas-authorino-ca.sh
-bash manifests/fix-maas-authorino-grpc-tls.sh
-----
+Causa: Envoy habla TLS con Authorino `:50051` mientras el listener está en plaintext (y falta el service CA para validar `maas-api` HTTPS). El script `apply-maas.sh` lo detecta y corrige al final (re-ejecutándolo aplica los fixes de nuevo). Los fixes viven dentro del script (función `apply_authorino_fixes`).
 
 Smoke test (respuesta JSON = transporte OK; sin subscription de xref:09-00-subscription.adoc[módulo 9] puede devolver error JSON, y es válido aquí):
 

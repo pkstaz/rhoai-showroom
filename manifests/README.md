@@ -9,7 +9,7 @@ Run `oc apply` / scripts from the **repo root**.
 | `cluster-monitoring-config.yaml` | User-workload monitoring (module 2) |
 | `oauth-htpasswd.yaml` | Optional OAuth htpasswd patch |
 | `maas/` | MaaS infra bundle: GatewayClass, Kuadrant, Postgres + kustomization GitOps (`oc apply -k maas`) (module 4) |
-| `apply-maas.sh` | MaaS end-to-end installer (operator + connectivity + postgres + gateway + DSC) |
+| `apply-maas.sh` | MaaS end-to-end installer (operators + connectivity + postgres + gateway + DSC + Authorino auto-fix) |
 | `rhoai-operator.yaml` | RHOAI Operator |
 | `default-dsc.yaml` | DataScienceCluster |
 | `odh-dashboard-config-patch.yaml` | Dashboard flags |
@@ -26,8 +26,6 @@ Run `oc apply` / scripts from the **repo root**.
 | `patch-llmisvc-cpu.sh` | Force vLLM CPU after wizard |
 | `maas-subscription.yaml` | Auth policy + subscription (Qwen) |
 | `maas-subscription-gpt-oss-20b.yaml` | Auth policy + subscription (GPU) |
-| `fix-maas-authorino-ca.sh` | Authorino + service CA |
-| `fix-maas-authorino-grpc-tls.sh` | Authorino gRPC TLS (HTTP 500 en `/maas-api/v1/api-keys`) |
 | `apply-gpu-booking-hybrid.sh` | GPU Booking with Fake + real NVIDIA (discovery off) |
 | `fix-maas-gpu-utilization.sh` | DCGM → `accelerator_gpu_utilization` on cluster Prometheus + RHOAI MonitoringStack |
 | `fix-maas-usage-user-label.sh` | Usage UI user label |

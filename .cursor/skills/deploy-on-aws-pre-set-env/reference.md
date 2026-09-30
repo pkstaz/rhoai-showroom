@@ -96,8 +96,8 @@ Two different Authorino problems:
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `/v1/models` or chat `AUTH_FAILURE` / “Exception thrown while generating token” | Authorino cannot trust `maas-api` TLS | `bash manifests/fix-maas-authorino-ca.sh` |
-| `POST /maas-api/v1/api-keys` **HTTP 500**; Envoy `kuadrant-auth-service` gRPC not OK | EnvoyFilter `openshift-ai-inference-authn-ssl` makes wasm talk **TLS** to Authorino `:50051`; Authorino listener is **plaintext** | `bash manifests/fix-maas-authorino-grpc-tls.sh` |
+| `/v1/models` or chat `AUTH_FAILURE` / “Exception thrown while generating token” | Authorino cannot trust `maas-api` TLS | `bash manifests/apply-maas.sh` (Authorino auto-fix) |
+| `POST /maas-api/v1/api-keys` **HTTP 500**; Envoy `kuadrant-auth-service` gRPC not OK | EnvoyFilter `openshift-ai-inference-authn-ssl` makes wasm talk **TLS** to Authorino `:50051`; Authorino listener is **plaintext** | `bash manifests/apply-maas.sh` (Authorino auto-fix) |
 
 Do **not** try to strip TLS with DestinationRule `tls.mode=DISABLE` or EnvoyFilter MERGE → `raw_buffer`. Those lose against `openshift-ai-inference-authn-ssl`. Enable Authorino listener TLS with an OpenShift serving cert, then **delete the MaaS gateway pod** so Envoy reconnects.
 
@@ -172,8 +172,7 @@ curl -sk "https://${MAAS_URL}/v1/chat/completions" \
   | jq -r '.choices[0].message.content'
 ```
 
-If `/v1/models` returns AUTH_FAILURE, re-run `bash manifests/fix-maas-authorino-ca.sh`.
-If key creation returns HTTP 500, re-run `bash manifests/fix-maas-authorino-grpc-tls.sh`.
+If `/v1/models` returns AUTH_FAILURE or key creation returns HTTP 500, re-run `bash manifests/apply-maas.sh` (Authorino auto-fix, idempotent).
 
 ## Playground OGXServer
 
