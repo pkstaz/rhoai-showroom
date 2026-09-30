@@ -6,7 +6,7 @@ vLLM *CUDA* en un nodo con GPU NVIDIA real. Fake GPU (módulo 5.2) *no* ejecuta 
 
 Requisitos: xref:05-01-nvidia-gpu.adoc[NVIDIA GPU Operator] + profile `nvidia-gpu`, MaaS (módulo 4), proyecto `llm` (lo crea xref:08-01-deploy-cpu.adoc[CPU] si aún no existe).
 
-Manifiesto: `manifests/llminferenceservice-gpt-oss-20b.yaml` (`openai/gpt-oss-20b`, tool calling).
+Manifiesto: `manifests/llminferenceservice-qwen3-14b-awq.yaml` (`Qwen/Qwen3-14B-AWQ`, tool calling con parser *hermes*).
 
 == Qué crea
 
@@ -14,10 +14,13 @@ Manifiesto: `manifests/llminferenceservice-gpt-oss-20b.yaml` (`openai/gpt-oss-20
 |===
 |Recurso |Detalle
 
-|`LLMInferenceService/gpt-oss-20b`
-|Imagen `rhaii-early-access/vllm-cuda-rhel9:3.5.0-ea.2`, `nvidia.com/gpu: 1`, `--enable-auto-tool-choice`.
+|`Secret/qwen3-14b-awq` (`uri-v1`)
+|`hf://Qwen/Qwen3-14B-AWQ`; el wizard del dashboard pre-carga el Model location al editar.
 
-|`MaaSModelRef/gpt-oss-20b`
+|`LLMInferenceService/qwen3-14b-awq`
+|Imagen `rhaii-early-access/vllm-cuda-rhel9:3.5.0-ea.2`, `nvidia.com/gpu: 1`, `--max-model-len=32768`, `--enable-auto-tool-choice --tool-call-parser=hermes`, `--uvicorn-log-level=warning`.
+
+|`MaaSModelRef/qwen3-14b-awq`
 |Publica el modelo en MaaS.
 |===
 
@@ -34,7 +37,7 @@ oc get nodes -o json | jq -r '
 '
 # Si el product no es NVIDIA-L4:
 #   oc apply ...  y luego
-#   oc patch llminferenceservice gpt-oss-20b -n llm --type merge -p \
+#   oc patch llminferenceservice qwen3-14b-awq -n llm --type merge -p \
 #     '{"spec":{"template":{"nodeSelector":{"nvidia.com/gpu.product":"<PRODUCT>"}}}}'
 ----
 
@@ -43,31 +46,44 @@ oc get nodes -o json | jq -r '
 [source,bash]
 ----
 oc apply -f manifests/hardware-profile-nvidia.yaml
-oc apply -f manifests/llminferenceservice-gpt-oss-20b.yaml
-oc wait --for=condition=Ready llminferenceservice/gpt-oss-20b -n llm --timeout=1800s
+oc apply -f manifests/llminferenceservice-qwen3-14b-awq.yaml
+oc wait --for=condition=Ready llminferenceservice/qwen3-14b-awq -n llm --timeout=1800s
 ----
 
 Primera vez: pull de pesos HF + imagen CUDA (10–20 min en L4).
 
 == Subscription
 
-El módulo 9 cubre Qwen. Para este modelo:
+El módulo 9 cubre Qwen3-0.6B. Para este modelo:
 
 [source,bash]
 ----
-oc apply -f manifests/maas-subscription-gpt-oss-20b.yaml
+oc apply -f manifests/maas-subscription-qwen3-14b-awq.yaml
 ----
 
-Nombre de subscription para API keys: `gpt-oss-20b-authenticated`.
+Nombre de subscription para API keys: `qwen3-14b-awq-authenticated`.
 
-En el chat usa `max_tokens` ≥ 256 (con 64 el reasoning se come el presupuesto y `content` sale vacío).
+En el chat: Qwen3 es *thinking model*. Usa `/no_think` en prompts cortos o `max_tokens` suficiente (el reasoning se come el presupuesto y `content` sale vacío). Con `max-model-len=32768` hay margen para tool calling.
+
+== Alternativa: gpt-oss-20b
+
+Mismo patrón con parser `openai` y `--max-model-len=8192`:
+
+[source,bash]
+----
+oc apply -f manifests/llminferenceservice-gpt-oss-20b.yaml
+oc apply -f manifests/maas-subscription-gpt-oss-20b.yaml
+oc wait --for=condition=Ready llminferenceservice/gpt-oss-20b -n llm --timeout=1800s
+----
+
+Subscription: `gpt-oss-20b-authenticated`. En el chat usa `max_tokens` ≥ 256 (con 64 el reasoning se come el presupuesto).
 
 == Verificar
 
 [source,bash]
 ----
-oc get llminferenceservice,maasmodelref gpt-oss-20b -n llm
-oc get pods -n llm -o wide | grep -i gpt
+oc get llminferenceservice,maasmodelref -n llm
+oc get pods -n llm -o wide | grep -iE "qwen|gpt"
 ----
 
 == Siguiente

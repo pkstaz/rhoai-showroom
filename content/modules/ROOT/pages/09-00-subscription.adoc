@@ -55,6 +55,8 @@ IMPORTANT: El nombre `qwen-authenticated` es el que usa el módulo 10 al pedir l
 
 [source,bash]
 ----
+# GPU (Qwen3-14B-AWQ)
+oc apply -f manifests/maas-subscription-qwen3-14b-awq.yaml
 # GPU (gpt-oss-20b)
 oc apply -f manifests/maas-subscription-gpt-oss-20b.yaml
 # TMM / externo — ya lo crea apply-external-model.sh (tmm-authenticated)

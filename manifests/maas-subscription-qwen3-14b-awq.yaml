@@ -1,0 +1,37 @@
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSAuthPolicy
+metadata:
+  name: qwen3-14b-awq-authenticated-access
+  namespace: models-as-a-service
+  annotations:
+    openshift.io/display-name: "Qwen3-14B-AWQ authenticated access"
+spec:
+  modelRefs:
+    - name: qwen3-14b-awq
+      namespace: llm
+  subjects:
+    groups:
+      - name: system:authenticated
+    users: []
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata:
+  name: qwen3-14b-awq-authenticated
+  namespace: models-as-a-service
+  annotations:
+    openshift.io/display-name: "Qwen3-14B-AWQ authenticated"
+spec:
+  owner:
+    groups:
+      - name: system:authenticated
+    users: []
+  priority: 10
+  modelRefs:
+    - name: qwen3-14b-awq
+      namespace: llm
+      tokenRateLimits:
+        - limit: 500
+          window: 30s
+        - limit: 5000
+          window: 5m

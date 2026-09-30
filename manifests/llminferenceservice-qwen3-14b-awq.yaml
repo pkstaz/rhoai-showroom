@@ -1,0 +1,98 @@
+# Qwen3-14B-AWQ (L4) en llm-d GPU con MaaS (module 8.2).
+# Adaptado de: opencode-maas-observability-workshop/manifests/llminferenceservice-qwen3-14b-awq.yaml
+# Cambios vs. el workshop de origen: proyecto llm (no my-first-model), ruta por
+# MaaS con auth (gateway maas-default-gateway + MaaSModelRef), profile nvidia-gpu.
+# Tool parser hermes (Qwen); el wizard del dashboard pre-carga el Model location
+# desde la connection (Secret uri-v1 + anotacion opendatahub.io/connections).
+apiVersion: v1
+kind: Secret
+metadata:
+  name: qwen3-14b-awq
+  namespace: llm
+  labels:
+    opendatahub.io/dashboard: "true"
+  annotations:
+    opendatahub.io/connection-type-protocol: "uri"
+    opendatahub.io/connection-type-ref: "uri-v1"
+    openshift.io/display-name: "Qwen3-14B-AWQ"
+type: Opaque
+stringData:
+  URI: hf://Qwen/Qwen3-14B-AWQ
+---
+apiVersion: serving.kserve.io/v1alpha1
+kind: LLMInferenceService
+metadata:
+  name: qwen3-14b-awq
+  namespace: llm
+  annotations:
+    openshift.io/display-name: "Qwen/Qwen3-14B-AWQ"
+    opendatahub.io/model-type: generative
+    opendatahub.io/hardware-profile-name: "nvidia-gpu"
+    opendatahub.io/hardware-profile-namespace: "redhat-ods-applications"
+    opendatahub.io/connections: "qwen3-14b-awq"
+    security.opendatahub.io/enable-auth: "true"
+  labels:
+    opendatahub.io/dashboard: "true"
+    opendatahub.io/genai-asset: "true"
+spec:
+  replicas: 1
+  model:
+    name: qwen3-14b-awq
+    uri: hf://Qwen/Qwen3-14B-AWQ
+  router:
+    scheduler: {}
+    route: {}
+    gateway:
+      refs:
+        - name: maas-default-gateway
+          namespace: openshift-ingress
+  template:
+    containers:
+      - name: main
+        image: registry.redhat.io/rhaii-early-access/vllm-cuda-rhel9:3.5.0-ea.2
+        command:
+          - python
+          - -m
+          - vllm.entrypoints.openai.api_server
+        args:
+          - "--served-model-name={{.Name}}"
+          - --model=/mnt/models
+          - --max-model-len=32768
+          - --enable-ssl-refresh
+          - --ssl-certfile=/var/run/kserve/tls/tls.crt
+          - --ssl-keyfile=/var/run/kserve/tls/tls.key
+          - --enable-force-include-usage
+          - --enable-auto-tool-choice
+          - --tool-call-parser=hermes
+          # silencia el access log de uvicorn (spam de GET /metrics 200 OK)
+          - --uvicorn-log-level=warning
+        env:
+          - name: HF_HOME
+            value: /tmp/hf_home
+          - name: HF_HUB_DISABLE_XET
+            value: "1"
+        ports:
+          - containerPort: 8000
+            name: http
+            protocol: TCP
+        resources:
+          requests:
+            cpu: "4"
+            memory: 12Gi
+            nvidia.com/gpu: "1"
+          limits:
+            cpu: "8"
+            memory: 16Gi
+            nvidia.com/gpu: "1"
+    nodeSelector:
+      nvidia.com/gpu.product: NVIDIA-L4
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSModelRef
+metadata:
+  name: qwen3-14b-awq
+  namespace: llm
+spec:
+  modelRef:
+    kind: LLMInferenceService
+    name: qwen3-14b-awq
