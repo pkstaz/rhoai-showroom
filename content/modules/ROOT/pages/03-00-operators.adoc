@@ -1,7 +1,8 @@
-= Operadores
+= Operadores base
 
-Antes de OpenShift AI hace falta un conjunto *fijo* de operadores de plataforma.
-Sin ellos no podrás exponer MaaS por Gateway con TLS, usar AI Pipelines, repartir inferencia con llm-d ni reservar GPU con Kueue.
+Antes de instalar OpenShift AI (primer paso de este módulo) hace falta un conjunto *base* de operadores de plataforma: los que el `DataScienceCluster` espera ya instalados.
+
+Los operadores de MaaS (cert-manager, Connectivity Link y Leader Worker Set) van en xref:04-01-operators-maas.adoc[Prerrequisitos → Operadores MaaS] del módulo 4.
 
 Canal y namespace: los que propone el *Software Catalog*, salvo que la tabla indique otra cosa.
 
@@ -28,10 +29,7 @@ check() {
     fi
   fi
 }
-check "cert-manager" "cert-manager"
 check "OpenShift Pipelines" "pipelines"
-check "Connectivity Link" "connectivity"
-check "Leader Worker Set" "leaderworker|lws"
 check "Kueue" "kueue"
 ----
 
@@ -41,20 +39,11 @@ check "Kueue" "kueue"
 |===
 |Operador |Para qué sirve
 
-|*cert-manager Operator for Red Hat OpenShift*
-|Emite y renueva certificados TLS. Los usa el stack de *Gateway API* / *AI Gateway* para HTTPS en las rutas que exponen *Models as a Service* (y endpoints relacionados del lab).
-
 |*Red Hat OpenShift Pipelines*
 |Base Tekton para habilitar *AI Pipelines* en OpenShift AI (pipelines de datos / ML desde la consola más adelante).
 
-|*Red Hat Connectivity Link*
-|Capa de *Gateway API* + políticas (Kuadrant): enrutado, auth y límites delante del *AI Gateway* / MaaS. Instala *solo el Operator* ahora (`openshift-operators`, All namespaces). El `GatewayClass` y la instancia Kuadrant van en el módulo 4, *después* de OpenShift AI.
-
-|*Leader Worker Set Operator*
-|Coordina pods *líder + workers* para inferencia distribuida. llm-d lo usa cuando un modelo no cabe en un solo pod y hay que repartirlo. Namespace `openshift-lws-operator`, canal `stable-v1.0`.
-
 |*Red Hat build of Kueue*
-|*GPU Booking*: colas y cuotas para que los jobs de GPU no saturen el cluster. Namespace `openshift-kueue-operator`, canal `stable-v1.4` (CSV `1.4.2`), *All namespaces*. OwnNamespace no está soportado.
+|*GPU Booking*: colas y cuotas para que los jobs de GPU no saturen el cluster. El DSC lo deja `Unmanaged`: usa este Operator y no lo gestiona. Namespace `openshift-kueue-operator`, canal `stable-v1.4` (CSV `1.4.2`), *All namespaces*. OwnNamespace no está soportado.
 |===
 
 == Orden de instalación
@@ -65,34 +54,11 @@ En la consola: *Ecosystem* → *Software Catalog*. Instala uno, espera *Succeede
 
 También puedes aplicar *uno por uno* desde la raíz del repo. Espera `Succeeded` entre cada apply (reutiliza el comando de validación).
 
-=== cert-manager
-
-[source,bash]
-----
-oc apply -f manifests/operators/cert-manager/
-----
-
 === OpenShift Pipelines
 
 [source,bash]
 ----
 oc apply -f manifests/operators/pipelines/
-----
-
-=== Connectivity Link
-
-Si el cluster *ya* tiene Authorino Operator standalone, desinstálalo *antes* (Subscription + CSV + `operators.operators.coreos.com` de Authorino). Connectivity Link lo reinstala vía Kuadrant. No borres `rhcl-operator`.
-
-[source,bash]
-----
-oc apply -f manifests/operators/connectivity-link/
-----
-
-=== Leader Worker Set
-
-[source,bash]
-----
-oc apply -f manifests/operators/leader-worker-set/
 ----
 
 === Kueue
@@ -109,3 +75,5 @@ oc apply -f manifests/operators/kueue/
 == Verificar
 
 Vuelve a ejecutar el comando de *Validar instalados y pendientes*. Todos deben quedar en `OK`.
+
+Los operadores de MaaS (cert-manager, Connectivity Link, Leader Worker Set) se instalan más adelante, en xref:04-01-operators-maas.adoc[Prerrequisitos → Operadores MaaS].

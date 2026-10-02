@@ -3,7 +3,7 @@
 ** xref:00-02-raci-gaps.adoc[RACI y GAPs — evaluación por cliente]
 * xref:01-00-web-terminal.adoc[1. Web Terminal]
 * xref:03-00-rhoai.adoc[3. Instalar OpenShift AI]
-** xref:03-00-operators.adoc[Prerrequisitos: Operadores de plataforma]
+** xref:03-00-operators.adoc[Prerrequisitos: Operadores base]
 ** xref:03-00-monitoring.adoc[Prerrequisitos: Monitoreo]
 ** xref:03-01-operator.adoc[Operator]
 ** xref:03-02-dsc.adoc[DataScienceCluster]

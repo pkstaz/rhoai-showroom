@@ -5,7 +5,7 @@ Run `oc apply` / scripts from the **repo root**.
 
 | Path | Module |
 |---|---|
-| `operators/` | Prerequisite operators (module 3 prerequisites), one directory per Operator
+| `operators/` | Prerequisite operators: base (module 3) + MaaS (module 4), one directory per Operator
 | `cluster-monitoring-config.yaml` | User-workload monitoring (module 3 prerequisites) |
 | `oauth-htpasswd.yaml` | Optional OAuth htpasswd patch |
 | `maas/` | MaaS infra bundle: GatewayClass, Kuadrant, Postgres + kustomization GitOps (`oc apply -k maas`) (module 4) |

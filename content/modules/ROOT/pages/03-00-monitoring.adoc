@@ -1,4 +1,4 @@
-= Monitoreo (user workloads)
+= Monitoreo de user workloads
 
 OpenShift separa el monitoreo de *plataforma* (`openshift-monitoring`) del de *cargas de usuario*.
 OpenShift AI (dashboard, workbenches, serving) y Kueue publican métricas en ese segundo plano: *user-workload monitoring*.
@@ -9,7 +9,7 @@ Sin `enableUserWorkload: true`:
 * Kueue / GPU Booking no tienen el pipeline de métricas que esperan para colas y ocupación
 * no se crea (o no queda operativo) el namespace `openshift-user-workload-monitoring`
 
-Por eso se activa *aquí*, en los pre-requisitos, *antes* del Operator de OpenShift AI.
+Por eso se activa *aquí*, en los prerrequisitos de este módulo, *antes* del Operator de OpenShift AI.
 
 == Comprobar si ya existe
 

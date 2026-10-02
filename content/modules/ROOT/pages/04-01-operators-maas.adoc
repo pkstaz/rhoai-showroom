@@ -1,16 +1,16 @@
-= Prerrequisitos: Operadores MaaS
+= Operadores MaaS
 
-Antes de Habilitar MaaS, tres operadores de plataforma deben quedar `Succeeded`:
+Antes de Habilitar MaaS hacen falta tres operadores de plataforma:
 
 * *cert-manager Operator for Red Hat OpenShift* — emite los certificados TLS que usa el stack de *Gateway API* / *AI Gateway* en las rutas de MaaS.
-* *Red Hat Connectivity Link* — capa de *Gateway API* + políticas (Kuadrant) delante del *AI Gateway*. Instalado solo como Operator (`openshift-operators`, All namespaces); el `GatewayClass` y la instancia Kuadrant van en xref:04-00-connectivity.adoc[GatewayClass y Kuadrant].
-* *Leader Worker Set Operator* — coordina pods *líder + workers* que *llm-d* usa al desplegar modelos (módulo 8).
+* *Red Hat Connectivity Link* — capa de *Gateway API* + políticas (Kuadrant) delante del *AI Gateway*. Instala *solo el Operator* ahora (`openshift-operators`, All namespaces); el `GatewayClass` y la instancia Kuadrant van en xref:04-00-connectivity.adoc[GatewayClass y Kuadrant].
+* *Leader Worker Set Operator* — coordina pods *líder + workers* para inferencia distribuida; *llm-d* lo usa al desplegar modelos (módulo 8). Namespace `openshift-lws-operator`, canal `stable-v1.0`.
 
-Los tres se instalaron como xref:03-00-operators.adoc[operadores de plataforma] (Prerrequisitos de *Instalar OpenShift AI*). Esta página es la verificación rápida antes de crear el `GatewayClass`.
+Canal y namespace: los que propone el *Software Catalog*, salvo que la tabla indique otra cosa.
 
-== Verificar
+== Validar instalados y pendientes
 
-`OK` = CSV `Succeeded`; `PENDIENTE` = aún no está o no terminó:
+Ejecuta esto *antes* de instalar (y otra vez al final). `OK` = CSV `Succeeded`; `PENDIENTE` = aún no está o no terminó:
 
 [source,bash]
 ----
@@ -36,15 +36,39 @@ check "Connectivity Link" "connectivity"
 check "Leader Worker Set" "leaderworker|lws"
 ----
 
-== Si falta alguno
+== Orden de instalación
 
-`apply-maas.sh` reinstala *Connectivity Link* y *Leader Worker Set* si faltan; *cert-manager no* — instálalo aparte:
+En la consola: *Ecosystem* → *Software Catalog*. Instala uno, espera *Succeeded*, sigue al siguiente (mismo orden que la lista de arriba).
+
+== Manifiestos por operador
+
+También puedes aplicar *uno por uno* desde la raíz del repo. Espera `Succeeded` entre cada apply (reutiliza el comando de validación).
+
+=== cert-manager
 
 [source,bash]
 ----
 oc apply -f manifests/operators/cert-manager/
+----
+
+=== Connectivity Link
+
+Si el cluster *ya* tiene Authorino Operator standalone, desinstálalo *antes* (Subscription + CSV + `operators.operators.coreos.com` de Authorino). Connectivity Link lo reinstala vía Kuadrant. No borres `rhcl-operator`.
+
+[source,bash]
+----
 oc apply -f manifests/operators/connectivity-link/
+----
+
+=== Leader Worker Set
+
+[source,bash]
+----
 oc apply -f manifests/operators/leader-worker-set/
 ----
 
-Espera `Succeeded` entre cada apply. Las advertencias de Authorino standalone y de canales valen igual aquí: xref:03-00-operators.adoc[Operadores de plataforma].
+== Verificar
+
+Vuelve a ejecutar el comando de *Validar instalados y pendientes*. Todos deben quedar en `OK`.
+
+NOTE: `apply-maas.sh` (xref:04-02-maas.adoc[Postgres, Gateway y modelsAsAService]) reinstala *Connectivity Link* y *Leader Worker Set* si faltan; *cert-manager no* — instálalo antes con `oc apply -f manifests/operators/cert-manager/`.

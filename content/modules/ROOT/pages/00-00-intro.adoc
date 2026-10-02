@@ -57,6 +57,6 @@ No instales OpenShift Serverless / Service Mesh *2*. Este lab usa Gateway API; e
 
 Lee xref:00-01-lab-a-prd.adoc[Lab → Prd] antes del hands-on si facilitas el workshop. Para evaluar cada cliente usa la herramienta interactiva xref:00-02-raci-gaps.adoc[RACI y GAPs — evaluación por cliente].
 
-Sigue el menú de la izquierda, de arriba hacia abajo. En los prerrequisitos de *Instalar OpenShift AI* deja los operadores de plataforma y el monitoreo de user workloads *antes* del Operator de OpenShift AI. El Operator de Connectivity Link se instala con esos operadores; el `GatewayClass` y la instancia Kuadrant van *después* de OpenShift AI. Antes de *Habilitar MaaS* verifica cert-manager, Connectivity Link y Leader Worker Set. No enciendas `modelsAsAService` hasta tener gateway y base de datos.
+Sigue el menú de la izquierda, de arriba hacia abajo. En los prerrequisitos de *Instalar OpenShift AI* deja los operadores base (Pipelines, Kueue) y el monitoreo de user workloads *antes* del Operator de OpenShift AI. cert-manager, Connectivity Link y Leader Worker Set se instalan en los prerrequisitos de *Habilitar MaaS*; el `GatewayClass` y la instancia Kuadrant van *después* de OpenShift AI. No enciendas `modelsAsAService` hasta tener gateway y base de datos.
 
 Después de xref:10-00-verify.adoc[probar inferencia], continúa con xref:11-00-observabilidad.adoc[observabilidad MaaS], xref:12-00-evalhub.adoc[EvalHub], xref:13-00-finops.adoc[FinOps], xref:14-00-guardrails.adoc[Guardrails] y el resto del menú (registry, ruteo, AutoML, AutoRAG, prompts, MCP, AgentOps, Skills).
