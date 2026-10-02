@@ -1,5 +1,6 @@
 * xref:00-00-intro.adoc[0. Introducción]
-** xref:00-01-lab-a-prd.adoc[Lab → Prd, RACI y GAPs]
+** xref:00-01-lab-a-prd.adoc[Lab → Prd]
+** xref:00-02-raci-gaps.adoc[RACI y GAPs — evaluación por cliente]
 * xref:01-00-web-terminal.adoc[1. Web Terminal]
 * xref:02-00-prerequisites.adoc[2. Pre-requisitos]
 ** xref:02-00-operators.adoc[Operadores]

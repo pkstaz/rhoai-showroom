@@ -55,7 +55,7 @@ No instales OpenShift Serverless / Service Mesh *2*. Este lab usa Gateway API; e
 
 == Orden
 
-Lee xref:00-01-lab-a-prd.adoc[Lab → Prd, RACI y GAPs] antes del hands-on si facilitas el workshop.
+Lee xref:00-01-lab-a-prd.adoc[Lab → Prd] antes del hands-on si facilitas el workshop. Para evaluar cada cliente usa la herramienta interactiva xref:00-02-raci-gaps.adoc[RACI y GAPs — evaluación por cliente].
 
 Sigue el menú de la izquierda, de arriba hacia abajo. En *Pre-requisitos* deja operadores y el monitoreo de user workloads *antes* del Operator de OpenShift AI. El Operator de Connectivity Link se instala con esos operadores; el `GatewayClass` y la instancia Kuadrant van *después* de OpenShift AI. No enciendas `modelsAsAService` hasta tener gateway y base de datos.
 

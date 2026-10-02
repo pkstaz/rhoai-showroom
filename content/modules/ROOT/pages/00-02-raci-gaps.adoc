@@ -1,0 +1,518 @@
+= RACI y GAPs — evaluación por cliente
+
+Herramienta interactiva para *facilitar el taller* con un cliente concreto. A partir del mapa teórico de xref:00-01-lab-a-prd.adoc[Lab → Prd], evalúa cada capacidad, reparte responsabilidades (RACI) y exporta la foto de gaps para entregarla.
+
+* Todo corre en el navegador: el estado se guarda en `localStorage` y se exporta como fichero (*Markdown* para entregar, *JSON* para retomar después).
+* El *RACI* parte del borrador del lab; ajústalo por cliente. La herramienta avisa de filas sin *A* (Accountable) o con *A* duplicado.
+* El *resumen* se calcula solo: gaps, parciales, alertas de gobierno y carga por equipo.
+
+++++
+<div id="raci-gaps-app">
+  <section class="rg-meta">
+    <div class="rg-field">
+      <label for="rg-cliente">Cliente</label>
+      <input id="rg-cliente" type="text" placeholder="Nombre del cliente / proyecto">
+    </div>
+    <div class="rg-field">
+      <label for="rg-fecha">Fecha</label>
+      <input id="rg-fecha" type="date">
+    </div>
+    <div class="rg-field">
+      <label for="rg-facilitador">Facilitador</label>
+      <input id="rg-facilitador" type="text" placeholder="Quien facilita el taller">
+    </div>
+  </section>
+
+  <section class="rg-section">
+    <div class="rg-section-head">
+      <h2>Evaluación de capacidades (GAPs)</h2>
+      <div class="rg-chips" id="rg-chips"></div>
+    </div>
+    <p class="rg-hint">Marca el estado actual del cliente en cada área. La referencia <em>Lab hoy → Prd objetivo</em> viene del módulo anterior.</p>
+    <div class="rg-areas" id="rg-areas"></div>
+  </section>
+
+  <section class="rg-section">
+    <div class="rg-section-head"><h2>RACI</h2></div>
+    <p class="rg-hint">R = Responsible · A = Accountable · C = Consulted · I = Informed. Cada fila debe tener exactamente un <strong>A</strong> (R/A cuenta como A).</p>
+    <div class="rg-tablewrap">
+      <table class="rg-raci" id="rg-raci"></table>
+    </div>
+    <ul class="rg-alerts" id="rg-raci-alerts"></ul>
+  </section>
+
+  <section class="rg-section">
+    <div class="rg-section-head"><h2>Resumen</h2></div>
+    <div id="rg-resumen"></div>
+  </section>
+
+  <section class="rg-actions">
+    <button type="button" id="rg-print" class="rg-btn rg-primary">Imprimir / PDF</button>
+    <button type="button" id="rg-md" class="rg-btn">Descargar Markdown</button>
+    <button type="button" id="rg-json" class="rg-btn">Descargar JSON</button>
+    <label class="rg-filelabel">Cargar JSON<input type="file" id="rg-load" accept=".json,application/json"></label>
+    <button type="button" id="rg-reset" class="rg-btn rg-danger">Reiniciar</button>
+  </section>
+</div>
+<style>
+#raci-gaps-app {
+  --rg-bg: #ffffff;
+  --rg-surface: #fafafa;
+  --rg-hover: #ededed;
+  --rg-border: #d2d2d2;
+  --rg-border-subtle: rgba(0, 0, 0, 0.08);
+  --rg-text: #151515;
+  --rg-muted: #4d4d4d;
+  --rg-accent: #ee0000;
+  --rg-link: #06c;
+  --rg-ok: #3e8635;
+  --rg-warn: #b35c00;
+  --rg-bad: #c9190b;
+  --rg-radius: 10px;
+}
+html.pf-v5-theme-dark #raci-gaps-app {
+  --rg-bg: #212427;
+  --rg-surface: #2b2d30;
+  --rg-hover: #3c3f42;
+  --rg-border: #3c3f42;
+  --rg-border-subtle: rgba(255, 255, 255, 0.08);
+  --rg-text: #f0f0f0;
+  --rg-muted: #b8bbbe;
+  --rg-link: #2b9af3;
+  --rg-ok: #7dbb42;
+  --rg-warn: #f0ab00;
+  --rg-bad: #ff6659;
+}
+#raci-gaps-app { color: var(--rg-text); font-size: 0.92rem; }
+#raci-gaps-app .rg-section {
+  background: var(--rg-bg);
+  border: 1px solid var(--rg-border-subtle);
+  border-radius: var(--rg-radius);
+  padding: 1.1rem 1.3rem;
+  margin: 1.2rem 0;
+}
+#raci-gaps-app .rg-section-head {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.8rem; margin-bottom: 0.4rem;
+}
+#raci-gaps-app h2 { color: var(--rg-text); font-size: 1.1rem; margin: 0; }
+#raci-gaps-app .rg-hint { color: var(--rg-muted); font-size: 0.82rem; margin: 0.2rem 0 0.8rem; }
+#raci-gaps-app .rg-meta {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.8rem; margin: 1.2rem 0;
+}
+#raci-gaps-app .rg-field { display: flex; flex-direction: column; gap: 0.25rem; }
+#raci-gaps-app label { color: var(--rg-muted); font-size: 0.8rem; font-weight: 600; }
+#raci-gaps-app input, #raci-gaps-app select {
+  background: var(--rg-surface); color: var(--rg-text);
+  border: 1px solid var(--rg-border); border-radius: 6px;
+  padding: 0.4rem 0.55rem; font-size: 0.88rem; font-family: inherit;
+}
+#raci-gaps-app input:focus, #raci-gaps-app select:focus { outline: 2px solid var(--rg-link); outline-offset: 0; }
+#raci-gaps-app .rg-chips { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+#raci-gaps-app .rg-chip {
+  font-size: 0.72rem; font-weight: 700; border-radius: 999px;
+  padding: 0.12rem 0.6rem; border: 1px solid var(--rg-border);
+  background: var(--rg-surface); color: var(--rg-muted);
+}
+#raci-gaps-app .rg-chip.rg-gap { color: var(--rg-bad); border-color: var(--rg-bad); }
+#raci-gaps-app .rg-chip.rg-parcial { color: var(--rg-warn); border-color: var(--rg-warn); }
+#raci-gaps-app .rg-chip.rg-cubierto { color: var(--rg-ok); border-color: var(--rg-ok); }
+#raci-gaps-app .rg-areas { display: flex; flex-direction: column; gap: 0.5rem; }
+#raci-gaps-app .rg-area {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.2fr) minmax(150px, 0.8fr) minmax(130px, 0.7fr) minmax(200px, 1.3fr);
+  gap: 0.6rem; align-items: center;
+  background: var(--rg-surface);
+  border: 1px solid var(--rg-border-subtle);
+  border-radius: 8px; padding: 0.55rem 0.75rem;
+}
+#raci-gaps-app .rg-area.rg-is-gap { border-left: 4px solid var(--rg-bad); }
+#raci-gaps-app .rg-area.rg-is-parcial { border-left: 4px solid var(--rg-warn); }
+#raci-gaps-app .rg-area.rg-is-cubierto { border-left: 4px solid var(--rg-ok); }
+#raci-gaps-app .rg-area-label { font-weight: 600; font-size: 0.9rem; }
+#raci-gaps-app .rg-area-ref { color: var(--rg-muted); font-size: 0.74rem; margin-top: 0.15rem; }
+#raci-gaps-app .rg-tablewrap { overflow-x: auto; }
+#raci-gaps-app table.rg-raci { border-collapse: collapse; width: 100%; margin: 0; }
+#raci-gaps-app table.rg-raci th, #raci-gaps-app table.rg-raci td {
+  border: 1px solid var(--rg-border-subtle);
+  background: transparent; padding: 0.35rem 0.5rem; text-align: left;
+}
+#raci-gaps-app table.rg-raci th {
+  background: var(--rg-surface); color: var(--rg-muted);
+  font-size: 0.8rem; white-space: nowrap;
+}
+#raci-gaps-app table.rg-raci td.rg-act { font-size: 0.88rem; min-width: 200px; }
+#raci-gaps-app table.rg-raci tr.rg-row-warn td.rg-act::after {
+  content: " ⚠"; color: var(--rg-warn); font-weight: 700;
+}
+#raci-gaps-app .rg-alerts { margin: 0.7rem 0 0; padding-left: 1.1rem; color: var(--rg-warn); font-size: 0.84rem; }
+#raci-gaps-app .rg-alerts li { margin: 0.15rem 0; }
+#raci-gaps-app .rg-alerts:empty { display: none; }
+#raci-gaps-app .rg-resumen-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 0.9rem; }
+#raci-gaps-app .rg-resumen-card {
+  background: var(--rg-surface); border: 1px solid var(--rg-border-subtle);
+  border-radius: 8px; padding: 0.7rem 0.9rem;
+}
+#raci-gaps-app .rg-resumen-card h3 { color: var(--rg-muted); font-size: 0.8rem; margin: 0 0 0.4rem; text-transform: uppercase; letter-spacing: 0.04em; }
+#raci-gaps-app .rg-resumen-card ul { margin: 0; padding-left: 1.1rem; font-size: 0.85rem; }
+#raci-gaps-app .rg-resumen-card li { margin: 0.2rem 0; }
+#raci-gaps-app .rg-resumen-card .rg-none { color: var(--rg-ok); font-weight: 600; }
+#raci-gaps-app .rg-actions {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.6rem; margin: 1.4rem 0;
+}
+#raci-gaps-app .rg-btn {
+  background: var(--rg-surface); color: var(--rg-text);
+  border: 1px solid var(--rg-border); border-radius: 8px;
+  padding: 0.5rem 1rem; font-size: 0.88rem; font-weight: 600;
+  cursor: pointer; font-family: inherit;
+}
+#raci-gaps-app .rg-btn:hover { background: var(--rg-hover); }
+#raci-gaps-app .rg-btn.rg-primary { background: var(--rg-accent); border-color: var(--rg-accent); color: #fff; }
+#raci-gaps-app .rg-btn.rg-primary:hover { background: #c00; }
+#raci-gaps-app .rg-btn.rg-danger { color: var(--rg-bad); border-color: var(--rg-bad); }
+#raci-gaps-app .rg-filelabel {
+  background: var(--rg-surface); color: var(--rg-text);
+  border: 1px solid var(--rg-border); border-radius: 8px;
+  padding: 0.5rem 1rem; font-size: 0.88rem; font-weight: 600; cursor: pointer;
+}
+#raci-gaps-app .rg-filelabel:hover { background: var(--rg-hover); }
+#raci-gaps-app .rg-filelabel input { display: none; }
+#raci-gaps-app .rg-status { color: var(--rg-muted); font-size: 0.78rem; width: 100%; }
+@media print {
+  #raci-gaps-app .rg-actions { display: none !important; }
+  #raci-gaps-app { color: #000; font-size: 0.8rem; }
+  #raci-gaps-app .rg-section { border-color: #bbb; break-inside: avoid; }
+  #raci-gaps-app input, #raci-gaps-app select { border: none; background: transparent; color: #000; padding-left: 0; }
+}
+</style>
+<script>
+(function () {
+  var KEY = 'raci-gaps-eval';
+  var ESTADOS = [['sin', 'Sin evaluar'], ['cubierto', 'Cubierto'], ['parcial', 'Parcial'], ['gap', 'Gap'], ['na', 'No aplica']];
+  var PRIOS = [['-', '—'], ['alta', 'Alta'], ['media', 'Media'], ['baja', 'Baja']];
+  var TEAMS = ['Data', 'Infra', 'Seguridad', 'Arquitectura', 'FinOps'];
+  var ROLES = ['—', 'R', 'A', 'R/A', 'C', 'I'];
+  var AREAS = [
+    { id: 'plataforma', label: 'Plataforma RHOAI', lab: 'OpenShift AI + monitoring + operadores previos', prd: 'Clusters dedicados, GitOps, Kueue productivo' },
+    { id: 'catalogo', label: 'Catálogo de modelos', lab: 'Model Catalog + modelo open source', prd: 'Catálogo curado, versionado y firmado' },
+    { id: 'serving', label: 'Serving de modelos', lab: 'CPU / GPU / externo manual (módulo 8)', prd: 'Serving validado, hardware profiles, promotion controlada' },
+    { id: 'maas', label: 'AI Gateway / MaaS', lab: 'Gateway + subscriptions + auth policy', prd: 'MaaS multi-equipo, cuotas, rotación de credenciales' },
+    { id: 'gpu', label: 'Gobierno de capacidad GPU', lab: 'Fake GPU + booking simulado', prd: 'GPU real, MIG, quotas Kueue' },
+    { id: 'observabilidad', label: 'Observabilidad', lab: 'Monitoring base + vista manual', prd: 'SLOs, alertas, trazas LLM, dashboards FinOps' },
+    { id: 'evaluacion', label: 'Evaluación automatizada', lab: 'EvalHub smoke (módulo 12)', prd: 'Suite automatizada + gates de promotion' },
+    { id: 'redteam', label: 'Red team / seguridad de modelos', lab: 'Garak quick (módulo 12.1)', prd: 'ART completo, umbral ASR en CI' },
+    { id: 'registry', label: 'Model Registry y firma', lab: 'Registry de lab, deploy desde HF', prd: 'Cosign, promotion firmada, lineage' },
+    { id: 'guardrails', label: 'Guardrails de contenido', lab: 'Presidio / regex en CPU (módulo 14)', prd: 'Colang, MCP Gateway, scan detrás de rails' },
+    { id: 'finops', label: 'FinOps', lab: 'Rate limits por subscription', prd: 'Showback / chargeback, coste por equipo' },
+    { id: 'gitops', label: 'GitOps / entornos', lab: 'Un cluster, apply manual', prd: 'dev → staging → prod automatizado' },
+    { id: 'automl', label: 'AutoML / AutoRAG', lab: 'Smoke CPU / GPU (módulos 17–18)', prd: 'Pipelines productivos, vector stores gestionados' },
+    { id: 'agentes', label: 'Prompt Registry / MCP / AgentOps', lab: 'Catálogos de lab (módulos 19–21)', prd: 'Inventario de agentes, A2A, ciclo de vida' }
+  ];
+  var ACTS = [
+    { label: 'Elegir modelos candidatos', raci: { Data: 'R/A', Infra: 'I', Seguridad: 'C', Arquitectura: 'C', FinOps: 'I' } },
+    { label: 'Evaluar calidad y riesgo', raci: { Data: 'R', Infra: 'I', Seguridad: 'A', Arquitectura: 'C', FinOps: 'I' } },
+    { label: 'Quantizar / destilar / firmar', raci: { Data: 'R', Infra: 'C', Seguridad: 'A', Arquitectura: 'C', FinOps: 'I' } },
+    { label: 'Instalar RHOAI y operadores', raci: { Data: 'I', Infra: 'R/A', Seguridad: 'C', Arquitectura: 'C', FinOps: 'I' } },
+    { label: 'Configurar gateway y MaaS', raci: { Data: 'C', Infra: 'R/A', Seguridad: 'C', Arquitectura: 'C', FinOps: 'I' } },
+    { label: 'Subscriptions y cuotas', raci: { Data: 'C', Infra: 'R', Seguridad: 'A', Arquitectura: 'C', FinOps: 'R' } },
+    { label: 'Observabilidad y alertas', raci: { Data: 'C', Infra: 'R/A', Seguridad: 'C', Arquitectura: 'I', FinOps: 'C' } },
+    { label: 'Showback / chargeback', raci: { Data: 'C', Infra: 'C', Seguridad: 'I', Arquitectura: 'I', FinOps: 'R/A' } },
+    { label: 'Roadmap Lab → Prd', raci: { Data: 'C', Infra: 'C', Seguridad: 'C', Arquitectura: 'R/A', FinOps: 'C' } }
+  ];
+
+  var $ = function (id) { return document.getElementById(id); };
+  var state = { cliente: '', fecha: hoy(), facilitador: '', areas: {}, raci: {}, cargado: null };
+
+  AREAS.forEach(function (a) { state.areas[a.id] = { estado: 'sin', prio: '-', notas: '' }; });
+  ACTS.forEach(function (act, i) {
+    state.raci[i] = {};
+    TEAMS.forEach(function (t) { state.raci[i][t] = act.raci[t]; });
+  });
+
+  function hoy() {
+    var d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function save() {
+    try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {}
+  }
+  function load() {
+    try {
+      var raw = localStorage.getItem(KEY);
+      if (!raw) return;
+      var saved = JSON.parse(raw);
+      if (!saved || !saved.areas) return;
+      state.cliente = saved.cliente || '';
+      state.fecha = saved.fecha || hoy();
+      state.facilitador = saved.facilitador || '';
+      state.cargado = saved.cargado || null;
+      AREAS.forEach(function (a) {
+        if (saved.areas[a.id]) state.areas[a.id] = Object.assign(state.areas[a.id], saved.areas[a.id]);
+      });
+      if (saved.raci) Object.keys(saved.raci).forEach(function (i) {
+        if (state.raci[i]) Object.assign(state.raci[i], saved.raci[i]);
+      });
+    } catch (e) {}
+  }
+  function applyState() {
+    $('rg-cliente').value = state.cliente;
+    $('rg-fecha').value = state.fecha;
+    $('rg-facilitador').value = state.facilitador;
+  }
+  function opts(list, sel) {
+    return list.map(function (p) {
+      return '<option value="' + p[0] + '"' + (p[0] === sel ? ' selected' : '') + '>' + p[1] + '</option>';
+    }).join('');
+  }
+  function renderAreas() {
+    $('rg-areas').innerHTML = AREAS.map(function (a) {
+      var v = state.areas[a.id];
+      var cls = v.estado === 'gap' ? ' rg-is-gap' : v.estado === 'parcial' ? ' rg-is-parcial' : v.estado === 'cubierto' ? ' rg-is-cubierto' : '';
+      return '<div class="rg-area' + cls + '">' +
+        '<div><div class="rg-area-label">' + a.label + '</div>' +
+        '<div class="rg-area-ref">Lab hoy: ' + a.lab + ' → Prd: ' + a.prd + '</div></div>' +
+        '<select data-area="' + a.id + '" data-kind="estado">' + opts(ESTADOS, v.estado) + '</select>' +
+        '<select data-area="' + a.id + '" data-kind="prio">' + opts(PRIOS, v.prio) + '</select>' +
+        '<input type="text" data-area="' + a.id + '" data-kind="notas" placeholder="Notas…" value="' + esc(v.notas) + '">' +
+        '</div>';
+    }).join('');
+  }
+  function renderRaci() {
+    var head = '<tr><th>Actividad</th>' + TEAMS.map(function (t) { return '<th>' + t + '</th>'; }).join('') + '</tr>';
+    var rows = ACTS.map(function (act, i) {
+      return '<tr data-act="' + i + '"><td class="rg-act">' + act.label + '</td>' +
+        TEAMS.map(function (t) {
+          return '<td><select data-act="' + i + '" data-team="' + t + '">' + optsRoles(state.raci[i][t]) + '</select></td>';
+        }).join('') + '</tr>';
+    }).join('');
+    $('rg-raci').innerHTML = head + rows;
+  }
+  function optsRoles(sel) {
+    return ROLES.map(function (r) {
+      return '<option value="' + r + '"' + (r === sel ? ' selected' : '') + '>' + r + '</option>';
+    }).join('');
+  }
+  function esc(s) { return String(s || '').replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;'); }
+  function raciAlerts() {
+    var out = [];
+    ACTS.forEach(function (act, i) {
+      var countA = TEAMS.filter(function (t) { return state.raci[i][t] === 'A' || state.raci[i][t] === 'R/A'; }).length;
+      if (countA === 0) out.push('“' + act.label + '”: sin <strong>A</strong> (Accountable).');
+      else if (countA > 1) out.push('“' + act.label + '”: <strong>A</strong> duplicado (' + countA + ').');
+    });
+    return out;
+  }
+  function counts() {
+    var c = { gap: 0, parcial: 0, cubierto: 0, na: 0, sin: 0 };
+    AREAS.forEach(function (a) { c[state.areas[a.id].estado]++; });
+    return c;
+  }
+  function renderChips() {
+    var c = counts();
+    $('rg-chips').innerHTML =
+      '<span class="rg-chip rg-gap">Gap ' + c.gap + '</span>' +
+      '<span class="rg-chip rg-parcial">Parcial ' + c.parcial + '</span>' +
+      '<span class="rg-chip rg-cubierto">Cubierto ' + c.cubierto + '</span>' +
+      '<span class="rg-chip">No aplica ' + c.na + '</span>' +
+      '<span class="rg-chip">Sin evaluar ' + c.sin + '</span>';
+  }
+  function renderResumen() {
+    var c = counts();
+    var gaps = AREAS.filter(function (a) {
+      var v = state.areas[a.id];
+      return v.estado === 'gap' || v.estado === 'parcial';
+    });
+    var alerts = raciAlerts();
+    var load = TEAMS.map(function (t) {
+      var r = 0, a = 0;
+      ACTS.forEach(function (act, i) {
+        var v = state.raci[i][t];
+        if (v === 'R') r++;
+        if (v === 'R/A') { r++; a++; }
+        if (v === 'A') a++;
+      });
+      return '<li><strong>' + t + '</strong>: ' + r + ' R · ' + a + ' A</li>';
+    }).join('');
+    $('rg-resumen').innerHTML =
+      '<div class="rg-resumen-grid">' +
+      '<div class="rg-resumen-card"><h3>Gaps identificados (' + gaps.length + ')</h3>' +
+      (gaps.length
+        ? '<ul>' + gaps.map(function (a) {
+            var v = state.areas[a.id];
+            var p = v.prio !== '-' ? ' · ' + v.prio.charAt(0).toUpperCase() + v.prio.slice(1) : '';
+            return '<li><strong>' + a.label + '</strong> — ' + v.estado + p + (v.notas ? ': ' + esc(v.notas) : '') + '</li>';
+          }).join('') + '</ul>'
+        : '<span class="rg-none">Sin gaps marcados.</span>') + '</div>' +
+      '<div class="rg-resumen-card"><h3>Alertas de gobierno RACI (' + alerts.length + ')</h3>' +
+      (alerts.length ? '<ul>' + alerts.map(function (x) { return '<li>' + x + '</li>'; }).join('') + '</ul>' : '<span class="rg-none">RACI correcto: cada fila con un solo A.</span>') + '</div>' +
+      '<div class="rg-resumen-card"><h3>Carga por equipo</h3><ul>' + load + '</ul></div>' +
+      '</div>';
+  }
+  function renderWarnRows() {
+    document.querySelectorAll('#rg-raci tr[data-act]').forEach(function (tr) {
+      var i = parseInt(tr.getAttribute('data-act'), 10);
+      var countA = TEAMS.filter(function (t) { return state.raci[i][t] === 'A' || state.raci[i][t] === 'R/A'; }).length;
+      tr.classList.toggle('rg-row-warn', countA !== 1);
+    });
+  }
+  function renderAll() {
+    renderAreas();
+    renderRaci();
+    renderChips();
+    renderResumen();
+    renderWarnRows();
+  }
+
+  $('rg-cliente').addEventListener('input', function () { state.cliente = this.value; save(); });
+  $('rg-fecha').addEventListener('input', function () { state.fecha = this.value; save(); });
+  $('rg-facilitador').addEventListener('input', function () { state.facilitador = this.value; save(); });
+
+  $('rg-areas').addEventListener('input', handler);
+  $('rg-areas').addEventListener('change', handler);
+  function handler(e) {
+    var t = e.target;
+    if (!t.dataset || !t.dataset.area) return;
+    state.areas[t.dataset.area][t.dataset.kind] = t.value;
+    save();
+    renderChips();
+    renderResumen();
+    var row = t.closest('.rg-area');
+    if (row) {
+      row.classList.remove('rg-is-gap', 'rg-is-parcial', 'rg-is-cubierto');
+      if (t.dataset.kind === 'estado' && (t.value === 'gap' || t.value === 'parcial' || t.value === 'cubierto')) {
+        row.classList.add(t.value === 'gap' ? 'rg-is-gap' : t.value === 'parcial' ? 'rg-is-parcial' : 'rg-is-cubierto');
+      }
+    }
+  }
+
+  $('rg-raci').addEventListener('change', function (e) {
+    var t = e.target;
+    if (!t.dataset || !t.dataset.act) return;
+    state.raci[t.dataset.act][t.dataset.team] = t.value;
+    save();
+    renderResumen();
+    renderWarnRows();
+  });
+
+  $('rg-print').addEventListener('click', function () { window.print(); });
+
+  function slug(s) {
+    return (s || 'cliente').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'cliente';
+  }
+  function filename(ext) {
+    return 'raci-gaps-' + slug(state.cliente) + '-' + (state.fecha || hoy()) + '.' + ext;
+  }
+  function download(contents, ext, mime) {
+    var blob = new Blob([contents], { type: mime });
+    var a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename(ext);
+    document.body.appendChild(a);
+    a.click();
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }
+
+  $('rg-md').addEventListener('click', function () {
+    var c = counts();
+    var L = [];
+    L.push('# RACI y GAPs — ' + (state.cliente || 'cliente'));
+    L.push('');
+    L.push('- Fecha: ' + (state.fecha || hoy()));
+    L.push('- Facilitador: ' + (state.facilitador || '—'));
+    L.push('');
+    L.push('## Evaluación de capacidades');
+    L.push('');
+    L.push('| Área | Estado | Prioridad | Notas |');
+    L.push('|---|---|---|---|');
+    AREAS.forEach(function (a) {
+      var v = state.areas[a.id];
+      var est = ESTADOS.find(function (x) { return x[0] === v.estado; })[1];
+      var pr = PRIOS.find(function (x) { return x[0] === v.prio; })[1];
+      L.push('| ' + a.label + ' | ' + est + ' | ' + pr + ' | ' + (v.notas || '') + ' |');
+    });
+    L.push('');
+    L.push('**Resumen:** ' + c.gap + ' gaps · ' + c.parcial + ' parciales · ' + c.cubierto + ' cubiertas · ' + c.na + ' no aplica · ' + c.sin + ' sin evaluar');
+    L.push('');
+    L.push('### Gaps identificados');
+    L.push('');
+    var gaps = AREAS.filter(function (a) { return state.areas[a.id].estado === 'gap' || state.areas[a.id].estado === 'parcial'; });
+    if (gaps.length) {
+      gaps.forEach(function (a) {
+        var v = state.areas[a.id];
+        L.push('- **' + a.label + '** (' + v.estado + (v.prio !== '-' ? ', ' + v.prio : '') + ')' + (v.notas ? ': ' + v.notas : ''));
+      });
+    } else {
+      L.push('- Sin gaps marcados.');
+    }
+    L.push('');
+    L.push('## RACI');
+    L.push('');
+    L.push('| Actividad | ' + TEAMS.join(' | ') + ' |');
+    L.push('|---' + TEAMS.map(function () { return '|---'; }).join('') + '|');
+    ACTS.forEach(function (act, i) {
+      L.push('| ' + act.label + ' | ' + TEAMS.map(function (t) { return state.raci[i][t]; }).join(' | ') + ' |');
+    });
+    L.push('');
+    L.push('### Alertas de gobierno');
+    L.push('');
+    var alerts = raciAlerts();
+    L.push(alerts.length ? alerts.map(function (x) { return '- ' + x.replace(/<[^>]+>/g, ''); }).join('\n') : '- RACI correcto: cada fila con un solo A.');
+    L.push('');
+    download(L.join('\n'), 'md', 'text/markdown');
+  });
+
+  $('rg-json').addEventListener('click', function () {
+    download(JSON.stringify(Object.assign({}, state, { version: 1, exportado: new Date().toISOString() }), null, 2), 'json', 'application/json');
+  });
+
+  $('rg-load').addEventListener('change', function () {
+    var file = this.files[0];
+    this.value = '';
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function () {
+      try {
+        var saved = JSON.parse(reader.result);
+        if (!saved || !saved.areas) throw new Error('formato');
+        state.cliente = saved.cliente || '';
+        state.fecha = saved.fecha || hoy();
+        state.facilitador = saved.facilitador || '';
+        state.cargado = file.name;
+        AREAS.forEach(function (a) {
+          if (saved.areas[a.id]) state.areas[a.id] = Object.assign(state.areas[a.id], saved.areas[a.id]);
+        });
+        if (saved.raci) Object.keys(saved.raci).forEach(function (i) {
+          if (state.raci[i]) Object.assign(state.raci[i], saved.raci[i]);
+        });
+        save();
+        applyState();
+        renderAll();
+      } catch (e) {
+        alert('JSON no válido: se esperaba un fichero exportado por esta herramienta.');
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  $('rg-reset').addEventListener('click', function () {
+    if (!confirm('¿Reiniciar la evaluación? Se borra el estado guardado en este navegador.')) return;
+    try { localStorage.removeItem(KEY); } catch (e) {}
+    state = { cliente: '', fecha: hoy(), facilitador: '', areas: {}, raci: {}, cargado: null };
+    AREAS.forEach(function (a) { state.areas[a.id] = { estado: 'sin', prio: '-', notas: '' }; });
+    ACTS.forEach(function (act, i) {
+      state.raci[i] = {};
+      TEAMS.forEach(function (t) { state.raci[i][t] = act.raci[t]; });
+    });
+    applyState();
+    renderAll();
+  });
+
+  load();
+  applyState();
+  renderAll();
+})();
+</script>
+++++
+
+Después del taller: entrega el *Markdown* (o el PDF impreso) al cliente y guarda el *JSON* para retomar la evaluación en la siguiente sesión. El estado en el navegador es local: no se envía a ningún servidor.

@@ -6,7 +6,7 @@ Workshop **Showroom de Red Hat OpenShift AI 3.5.1** (`rhoai-showroom`): guía ha
 
 El recorrido completo: Web Terminal → operadores/monitoring → RHOAI + dashboard + hardware profile CPU → MaaS (Gateway API/Kuadrant/Postgres) → GPU (NVIDIA/Fake + GPU Booking) → Model Catalog → despliegue de modelos (CPU / GPU / externo TMM) → subscriptions MaaS → verificación → observabilidad → EvalHub/Garak → FinOps → Guardrails → Model Registry → ruteo multi-modelo → AutoML/AutoRAG → Prompt Registry → MCP → AgentOps → Skills plugin.
 
-Regla del lab: **comando / `oc apply` primero** (manifiestos en `manifests/`), la UI es verificación al final de cada módulo. Público: facilitadores y asistentes; el módulo 0.1 mapea Lab→Prd con RACI y GAPs.
+Regla del lab: **comando / `oc apply` primero** (manifiestos en `manifests/`), la UI es verificación al final de cada módulo. Público: facilitadores y asistentes; el módulo 0.1 mapea Lab→Prd (teoría, qué evaluar) y el 0.2 es la herramienta interactiva RACI y GAPs por cliente (estado por área, validación de gobierno, export Markdown/JSON/print).
 
 ## Layout del repo
 

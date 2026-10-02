@@ -1,6 +1,6 @@
-= Lab → Prd, RACI y GAPs
+= Lab → Prd
 
-Este workshop no reemplaza una capacitación completa de MLOps/LLMOps. Sirve para salir con un *primer mapa*: qué resuelve la plataforma, qué hay que integrar y qué responsabilidades repartir entre equipos.
+Este módulo es la parte *teórica* del workshop: lo que deberíamos evaluar en cada cliente. Este workshop no reemplaza una capacitación completa de MLOps/LLMOps. Sirve para salir con un *primer mapa*: qué resuelve la plataforma, qué hay que integrar y qué responsabilidades repartir entre equipos.
 
 == Ciclo de vida objetivo
 
@@ -118,44 +118,9 @@ En *Lab* usamos un cluster efímero y un modelo pequeño en CPU. En *Prd* el mis
 | Guardrails, logging, auditoría, red team
 |===
 
-== RACI (borrador para vuestros proyectos)
+== Qué evaluar con cada cliente (GAPs típicos)
 
-.R = Responsible, A = Accountable, C = Consulted, I = Informed
-[cols="2,1,1,1,1,1"]
-|===
-| Actividad | Data | Infra | Seguridad | Arquitectura | FinOps
-
-| Elegir modelos candidatos
-| R/A | I | C | C | I
-
-| Evaluar calidad y riesgo
-| R | I | A | C | I
-
-| Quantizar / destilar / firmar
-| R | C | A | C | I
-
-| Instalar RHOAI y operadores
-| I | R/A | C | C | I
-
-| Configurar gateway y MaaS
-| C | R/A | C | C | I
-
-| Subscriptions y cuotas
-| C | R | A | C | R
-
-| Observabilidad y alertas
-| C | R/A | C | I | C
-
-| Showback / chargeback
-| C | C | I | I | R/A
-
-| Roadmap Lab → Prd
-| C | C | C | R/A | C
-|===
-
-Ajustad las celdas a vuestra organización. El objetivo del workshop es *discutir* esta matriz, no cerrarla.
-
-== GAPs típicos (salida del lab)
+Estas son las áreas de evaluación de salida del lab. Con cada cliente, marca el estado actual de cada área y su prioridad en la herramienta interactiva xref:00-02-raci-gaps.adoc[RACI y GAPs — evaluación por cliente] y exporta la foto para entregarla.
 
 [cols="2,2,2,1"]
 |===
