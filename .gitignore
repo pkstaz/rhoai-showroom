@@ -13,3 +13,7 @@ manifests/routing/tmm.env
 secrets.json
 package-lock.json
 yarn.lock
+kubeconf*
+kubeconfig*
+.multica/
+.opencode/
