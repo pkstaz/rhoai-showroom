@@ -13,25 +13,7 @@ ui:
   bundle:
     url: https://github.com/rhpds/rhdp_showroom_theme/releases/download/v0.0.1/ui-bundle.zip
     snapshot: true
-  supplemental_files:
-  - path: partials/footer-scripts.hbs
-    contents: ./content/supplemental-ui/partials/footer-scripts.hbs
-  - path: partials/head-styles.hbs
-    contents: ./content/supplemental-ui/partials/head-styles.hbs
-  - path: partials/header-content.hbs
-    contents: ./content/supplemental-ui/partials/header-content.hbs
-  - path: js/copy-code.js
-    contents: ./content/supplemental-ui/js/copy-code.js
-  - path: js/theme-toggle.js
-    contents: ./content/supplemental-ui/js/theme-toggle.js
-  - path: css/copy-code.css
-    contents: ./content/supplemental-ui/css/copy-code.css
-  - path: css/openshift-theme.css
-    contents: ./content/supplemental-ui/css/openshift-theme.css
-  - path: .nojekyll
-    contents: ""
-  - path: ui.yml
-    contents: "static_files: [ .nojekyll ]"
+  supplemental_files: ./content/supplemental-ui
 
 runtime:
   cache_dir: ./.cache/antora
@@ -40,6 +22,8 @@ antora:
   extensions:
   - require: ./content/lib/dev-mode.js
     enabled: false
+  - require: ./content/lib/landing-page.js
+    enabled: true
 
 output:
   dir: ./www

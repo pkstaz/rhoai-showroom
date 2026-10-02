@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="es" class="pf-v5-theme-dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Showroom de Red Hat OpenShift AI 3.5.1</title>
+<meta name="description" content="Workshop hands-on: instala Red Hat OpenShift AI 3.5.1 en un cluster vacío y deja Qwen3-0.6B publicado en Models as a Service (MaaS) servido con llm-d en CPU.">
+<style>
+  :root {
+    --ocp-bg: #f0f0f0;
+    --ocp-bg-elevated: #ffffff;
+    --ocp-bg-surface: #fafafa;
+    --ocp-bg-hover: #ededed;
+    --ocp-border: #d2d2d2;
+    --ocp-border-subtle: rgba(0, 0, 0, 0.08);
+    --ocp-text: #151515;
+    --ocp-text-muted: #4d4d4d;
+    --ocp-heading: #0c0c0c;
+    --ocp-link: #06c;
+    --ocp-link-hover: #004080;
+    --ocp-accent: #ee0000;
+    --ocp-radius-sm: 8px;
+    --ocp-radius-md: 12px;
+    --ocp-radius-lg: 16px;
+  }
+  html.pf-v5-theme-dark {
+    color-scheme: dark;
+    --ocp-bg: #151515;
+    --ocp-bg-elevated: #212427;
+    --ocp-bg-surface: #2b2d30;
+    --ocp-bg-hover: #3c3f42;
+    --ocp-border: #3c3f42;
+    --ocp-border-subtle: rgba(255, 255, 255, 0.08);
+    --ocp-text: #f0f0f0;
+    --ocp-text-muted: #b8bbbe;
+    --ocp-heading: #ffffff;
+    --ocp-link: #2b9af3;
+    --ocp-link-hover: #73bcf7;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: "Red Hat Text", "Segoe UI", system-ui, -apple-system, sans-serif;
+    background-color: var(--ocp-bg);
+    color: var(--ocp-text);
+    line-height: 1.55;
+  }
+  header.masthead {
+    background-color: var(--ocp-bg-elevated);
+    border-bottom: 1px solid var(--ocp-border-subtle);
+    padding: 0.9rem 1.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+  .brand { display: flex; align-items: center; gap: 0.9rem; text-decoration: none; }
+  .brand-mark {
+    width: 34px; height: 34px; border-radius: var(--ocp-radius-sm);
+    background: var(--ocp-accent); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1rem; flex: none;
+  }
+  .brand-title { color: var(--ocp-heading); font-weight: 600; font-size: 1.05rem; }
+  .theme-toggle {
+    background: var(--ocp-bg-surface); color: var(--ocp-text);
+    border: 1px solid var(--ocp-border); border-radius: var(--ocp-radius-sm);
+    padding: 0.35rem 0.8rem; cursor: pointer; font-size: 0.85rem;
+    font-family: inherit;
+  }
+  .theme-toggle:hover { background: var(--ocp-bg-hover); }
+  main { max-width: 1080px; margin: 0 auto; padding: 2.5rem 1.5rem 3.5rem; }
+  .hero {
+    background: var(--ocp-bg-elevated);
+    border: 1px solid var(--ocp-border-subtle);
+    border-radius: var(--ocp-radius-lg);
+    padding: 2.2rem 2.4rem;
+  }
+  .badge {
+    display: inline-block;
+    background: rgba(238, 0, 0, 0.12);
+    color: var(--ocp-accent);
+    border: 1px solid rgba(238, 0, 0, 0.35);
+    border-radius: 999px;
+    font-size: 0.78rem; font-weight: 600;
+    padding: 0.15rem 0.75rem;
+    letter-spacing: 0.02em;
+  }
+  html.pf-v5-theme-dark .badge { color: #ff5c5c; }
+  h1 { color: var(--ocp-heading); font-size: 2rem; margin: 0.9rem 0 0.6rem; line-height: 1.2; }
+  .hero p { color: var(--ocp-text-muted); margin: 0 0 1.4rem; max-width: 46rem; }
+  .hero code { background: var(--ocp-bg-surface); border: 1px solid var(--ocp-border-subtle); border-radius: 4px; padding: 0.1rem 0.35rem; font-size: 0.9em; }
+  .cta-row { display: flex; flex-wrap: wrap; gap: 0.8rem; margin-top: 0.4rem; }
+  .btn {
+    display: inline-block; text-decoration: none; font-weight: 600;
+    border-radius: var(--ocp-radius-sm); padding: 0.6rem 1.4rem; font-size: 0.95rem;
+    border: 1px solid transparent;
+  }
+  .btn-primary { background: var(--ocp-accent); color: #fff; }
+  .btn-primary:hover { background: #c00; }
+  .btn-secondary { background: transparent; color: var(--ocp-link); border-color: var(--ocp-border); }
+  .btn-secondary:hover { background: var(--ocp-bg-hover); color: var(--ocp-link-hover); }
+  .phases {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.25rem; margin-top: 1.5rem;
+  }
+  .card {
+    background: var(--ocp-bg-elevated);
+    border: 1px solid var(--ocp-border-subtle);
+    border-radius: var(--ocp-radius-md);
+    padding: 1.3rem 1.4rem;
+  }
+  .card h2 { color: var(--ocp-heading); font-size: 1.05rem; margin: 0 0 0.4rem; }
+  .card p { color: var(--ocp-text-muted); font-size: 0.9rem; margin: 0 0 0.7rem; }
+  .card .meta { font-size: 0.8rem; color: var(--ocp-text-muted); }
+  .card a.more { color: var(--ocp-link); font-size: 0.9rem; text-decoration: none; font-weight: 600; }
+  .card a.more:hover { color: var(--ocp-link-hover); text-decoration: underline; }
+  .module-index { margin-top: 2.2rem; }
+  .module-index h2 { color: var(--ocp-heading); font-size: 1.2rem; margin: 0 0 1rem; }
+  .module-grid {
+    display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 0.5rem;
+  }
+  .module-grid a {
+    display: flex; align-items: center; gap: 0.6rem;
+    background: var(--ocp-bg-elevated);
+    border: 1px solid var(--ocp-border-subtle);
+    border-radius: var(--ocp-radius-sm);
+    color: var(--ocp-link);
+    text-decoration: none;
+    padding: 0.55rem 0.8rem;
+    font-size: 0.88rem;
+  }
+  .module-grid a:hover { background: var(--ocp-bg-hover); color: var(--ocp-link-hover); }
+  .module-grid .num {
+    flex: none; font-weight: 700; font-size: 0.75rem;
+    color: var(--ocp-text-muted);
+    min-width: 2.1em; text-align: right;
+  }
+  .wip {
+    flex: none; margin-left: auto;
+    font-size: 0.62rem; font-weight: 700; letter-spacing: 0.05em;
+    color: #b35c00;
+    background: rgba(179, 92, 0, 0.12);
+    border: 1px solid rgba(179, 92, 0, 0.4);
+    border-radius: 999px; padding: 0.05rem 0.45rem;
+  }
+  footer {
+    border-top: 1px solid var(--ocp-border-subtle);
+    color: var(--ocp-text-muted);
+    font-size: 0.82rem;
+    padding: 1.2rem 1.5rem 1.6rem;
+    max-width: 1080px; margin: 0 auto;
+  }
+  footer a { color: var(--ocp-link); text-decoration: none; }
+  footer a:hover { color: var(--ocp-link-hover); text-decoration: underline; }
+</style>
+</head>
+<body>
+<header class="masthead">
+  <a class="brand" href="modules/00-00-intro.html">
+    <span class="brand-mark">AI</span>
+    <span class="brand-title">Showroom de Red Hat OpenShift AI 3.5.1</span>
+  </a>
+  <button type="button" id="theme-toggle" class="theme-toggle" aria-label="Cambiar tema claro/oscuro">Dark</button>
+</header>
+
+<main>
+  <section class="hero">
+    <span class="badge">RHOAI 3.5.1 · llm-d en CPU · MaaS</span>
+    <h1>Showroom de Red Hat OpenShift AI</h1>
+    <p>
+      Workshop hands-on que instala <strong>Red Hat OpenShift AI 3.5.1</strong> en un cluster vacío
+      y deja <strong>Qwen/Qwen3-0.6B</strong> publicado en <strong>Models as a Service (MaaS)</strong>,
+      servido con <strong>llm-d</strong> en CPU. Después del vertical slice (módulos 1–11): FinOps,
+      guardrails, registry, AutoML/AutoRAG, Prompt Registry, MCP, AgentOps y el plugin de Skills.
+    </p>
+    <div class="cta-row">
+      <a class="btn btn-primary" href="modules/00-00-intro.html">Empezar el workshop</a>
+      <a class="btn btn-secondary" href="modules/00-01-lab-a-prd.html">Lab → Prd, RACI y GAPs</a>
+    </div>
+  </section>
+
+  <section class="phases">
+    <div class="card">
+      <h2>Plataforma y MaaS</h2>
+      <p>Web Terminal, operadores y monitoring, OpenShift AI + dashboard, hardware profile CPU, Gateway API / Kuadrant / Postgres y MaaS.</p>
+      <span class="meta">Módulos 1–10 · ~2 h rápido / ~4 h explicativo</span><br>
+      <a class="more" href="modules/01-00-web-terminal.html">Comenzar →</a>
+    </div>
+    <div class="card">
+      <h2>GPU y modelos</h2>
+      <p>NVIDIA / Fake GPU Operator + GPU Booking, Model Catalog y despliegue de modelos en CPU, GPU o externo TMM.</p>
+      <span class="meta">Módulos 5–8 · GPU opcional</span><br>
+      <a class="more" href="modules/05-00-gpu.html">Comenzar →</a>
+    </div>
+    <div class="card">
+      <h2>Verificación y observabilidad</h2>
+      <p>Suscripciones MaaS, prueba de inferencia y observabilidad (Tempo / OTEL / COO / Loki) del vertical slice.</p>
+      <span class="meta">Módulos 0.1 + 9–11 · +60–90 min</span><br>
+      <a class="more" href="modules/09-00-subscription.html">Comenzar →</a>
+    </div>
+    <div class="card">
+      <h2>Avanzado y gobierno</h2>
+      <p>EvalHub/Garak, FinOps, Guardrails, Model Registry, ruteo multi-modelo, AutoML/AutoRAG, Prompt Registry, MCP, AgentOps y Skills.</p>
+      <span class="meta">Módulos 12–22 · +2–3 h · WIP</span><br>
+      <a class="more" href="modules/12-00-evalhub.html">Comenzar →</a>
+    </div>
+  </section>
+
+  <section class="module-index">
+    <h2>Índice de módulos</h2>
+    <div class="module-grid">
+      <a href="modules/00-00-intro.html"><span class="num">0</span> Introducción</a>
+      <a href="modules/00-01-lab-a-prd.html"><span class="num">0.1</span> Lab → Prd, RACI y GAPs</a>
+      <a href="modules/01-00-web-terminal.html"><span class="num">1</span> Web Terminal</a>
+      <a href="modules/02-00-prerequisites.html"><span class="num">2</span> Pre-requisitos</a>
+      <a href="modules/03-00-rhoai.html"><span class="num">3</span> Instalar OpenShift AI</a>
+      <a href="modules/04-00-dashboard.html"><span class="num">4</span> Habilitar MaaS</a>
+      <a href="modules/05-00-gpu.html"><span class="num">5</span> GPU</a>
+      <a href="modules/06-00-gpu-booking.html"><span class="num">6</span> GPU Booking Plugin</a>
+      <a href="modules/07-00-catalog.html"><span class="num">7</span> Model Catalog</a>
+      <a href="modules/08-00-deploy.html"><span class="num">8</span> Desplegar modelo</a>
+      <a href="modules/09-00-subscription.html"><span class="num">9</span> Suscripción MaaS</a>
+      <a href="modules/10-00-verify.html"><span class="num">10</span> Probar inferencia</a>
+      <a href="modules/11-00-observabilidad.html"><span class="num">11</span> Observabilidad MaaS</a>
+      <a href="modules/12-00-evalhub.html"><span class="num">12</span> EvalHub <span class="wip">WIP</span></a>
+      <a href="modules/13-00-finops.html"><span class="num">13</span> FinOps y cuotas <span class="wip">WIP</span></a>
+      <a href="modules/14-00-guardrails.html"><span class="num">14</span> Guardrails <span class="wip">WIP</span></a>
+      <a href="modules/15-00-registry.html"><span class="num">15</span> Model Registry <span class="wip">WIP</span></a>
+      <a href="modules/16-00-routing.html"><span class="num">16</span> Multi-modelo y ruteo <span class="wip">WIP</span></a>
+      <a href="modules/17-00-automl.html"><span class="num">17</span> AutoML <span class="wip">WIP</span></a>
+      <a href="modules/18-00-autorag.html"><span class="num">18</span> AutoRAG y vector stores <span class="wip">WIP</span></a>
+      <a href="modules/19-00-prompt-registry.html"><span class="num">19</span> Prompt Registry <span class="wip">WIP</span></a>
+      <a href="modules/20-00-mcp.html"><span class="num">20</span> MCP Catalog <span class="wip">WIP</span></a>
+      <a href="modules/21-00-agentops.html"><span class="num">21</span> AgentOps <span class="wip">WIP</span></a>
+      <a href="modules/22-00-skills.html"><span class="num">22</span> Skills Plugin <span class="wip">WIP</span></a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  Regla del lab: <strong>comando / <code>oc apply</code> primero</strong> — los manifiestos viven en <code>manifests/</code> del repo; la UI es verificación.
+  Fuente: <a href="https://github.com/pkstaz/rhoai-showroom" target="_blank" rel="noopener">github.com/pkstaz/rhoai-showroom</a>
+</footer>
+
+<script>
+(function () {
+  var STORAGE_KEY = 'lab-theme';
+  var DARK_CLASS = 'pf-v5-theme-dark';
+  var btn = document.getElementById('theme-toggle');
+
+  function apply(theme) {
+    var dark = theme !== 'light';
+    document.documentElement.classList.toggle(DARK_CLASS, dark);
+    try { localStorage.setItem(STORAGE_KEY, dark ? 'dark' : 'light'); } catch (e) {}
+    if (btn) {
+      btn.textContent = dark ? 'Light' : 'Dark';
+      btn.setAttribute('aria-pressed', dark ? 'true' : 'false');
+    }
+  }
+
+  function preferred() {
+    try {
+      var saved = localStorage.getItem(STORAGE_KEY);
+      if (saved === 'light' || saved === 'dark') return saved;
+    } catch (e) {}
+    return 'dark';
+  }
+
+  apply(preferred());
+  if (btn) {
+    btn.addEventListener('click', function () {
+      apply(document.documentElement.classList.contains(DARK_CLASS) ? 'light' : 'dark');
+    });
+  }
+})();
+</script>
+</body>
+</html>
