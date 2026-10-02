@@ -53,3 +53,9 @@ Los scripts de `manifests/` se ejecutan desde la **raíz del repo** contra un cl
 3. **GAPs documentados en el módulo 0.1** (salida Lab→Prd): suite de evaluación automatizada con gates de promotion, ART Chatterbox completo + umbral ASR en CI, firma Cosign / promotion firmada del Registry, Guardrails Colang + MCP Gateway, dashboards FinOps de tokens/coste por equipo, trazas LLM (latencia p95, tokens in/out), GPU productiva (MIG + Kueue), GitOps multi-entorno (dev→staging→prod).
 4. **Higiene del repo**: mover `kubeconf-*` fuera del repo o a `.gitignore`; revisar el allowlist de gitleaks (apunta a `manifests/maas-postgres.yaml`, que hoy vive en `manifests/maas/`).
 5. Sin lint/typecheck: no hay tests; la verificación es `antora generate` (build del sitio) y probar los scripts `apply-*.sh` en cluster.
+
+## Multica
+
+- Proyecto: **RHOAI Showroom** (`647779e4`)
+- Agente Multica del repo: **RHOAI Showroom Expert** (`f1da4be9-68d0-4091-8f09-48e042d894ba`) — toda tarea creada en Multica se asigna a este agente (`--assignee-id`), para que arranque a ejecutar en cuanto se registre.
+- Flujo estándar de tareas (global): análisis → tareas documentadas en Multica con sección **"Validación"** → `in_review` al terminar. Ver `~/.config/opencode/AGENTS.md`.
