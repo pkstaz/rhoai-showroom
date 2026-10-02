@@ -5,7 +5,7 @@
 * xref:03-00-rhoai.adoc[3. Instalar OpenShift AI]
 ** xref:03-00-operators.adoc[Prerrequisitos: Operadores base]
 ** xref:03-00-monitoring.adoc[Prerrequisitos: Monitoreo]
-** xref:03-01-operator.adoc[Operator]
+** xref:03-01-operator.adoc[OpenShift AI Operator]
 ** xref:03-02-dsc.adoc[DataScienceCluster]
 ** xref:03-03-odh-dashboard.adoc[ODHDashboardConfig]
 ** xref:03-04-hardware-profile-cpu.adoc[Hardware profile CPU]

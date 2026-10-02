@@ -1,4 +1,4 @@
-= Operator de OpenShift AI
+= OpenShift AI Operator
 
 Instala el Operator *Red Hat OpenShift AI* (no Community). Canal `stable-3.5`, versión `{rhoai-version}`, namespace `redhat-ods-operator`.
 
