@@ -126,8 +126,33 @@ if ! oc get storageclass gp3-csi >/dev/null 2>&1; then
   fi
 fi
 
-oc wait --for=condition=available deployment/minio -n redhat-ods-monitoring --timeout=300s
-oc wait job/minio-create-bucket -n redhat-ods-monitoring --for=condition=complete --timeout=300s || true
+# MinIO: PVC Bound + deploy Available (sin PVC no hay MinIO).
+if ! oc wait --for=condition=available deployment/minio -n redhat-ods-monitoring --timeout=300s; then
+  echo "ERROR: deployment/minio no Available; diagnostico:"
+  oc get pvc minio-data -n redhat-ods-monitoring || true
+  oc describe pvc minio-data -n redhat-ods-monitoring | tail -20 || true
+  oc get pods -n redhat-ods-monitoring -l app=minio || true
+  exit 1
+fi
+
+# Job del bucket: si quedo Failed (backoff agotado en una corrida anterior),
+# oc apply no lo recrea; sin bucket 'loki' el LokiStack no puede escribir.
+if oc get job minio-create-bucket -n redhat-ods-monitoring \
+  -o jsonpath='{.status.conditions[?(@.type=="Failed")].status}' 2>/dev/null | grep -q True; then
+  echo "job minio-create-bucket Failed (corrida anterior): recreando..."
+  oc delete job minio-create-bucket -n redhat-ods-monitoring --ignore-not-found
+  oc apply -k "${OBS}/usage-logging"
+fi
+if ! oc wait job/minio-create-bucket -n redhat-ods-monitoring --for=condition=complete --timeout=300s; then
+  echo "bucket job sin completar: reinicio forzado..."
+  oc delete job minio-create-bucket -n redhat-ods-monitoring --ignore-not-found
+  oc apply -k "${OBS}/usage-logging"
+  oc wait job/minio-create-bucket -n redhat-ods-monitoring --for=condition=complete --timeout=300s || {
+    echo "ERROR: bucket 'loki' no se creo; logs del job:"; \
+    oc logs -n redhat-ods-monitoring job/minio-create-bucket --tail=30 || true; exit 1; }
+fi
+echo "Bucket 'loki' listo para LokiStack."
+
 oc wait lokistack/usage -n redhat-ods-monitoring \
   --for=jsonpath='{.status.conditions[?(@.type=="Ready")].status}'=True --timeout=600s || \
   echo "WARN: LokiStack usage no Ready; revisa 'oc get lokistack usage -n redhat-ods-monitoring -o yaml' y sus events"

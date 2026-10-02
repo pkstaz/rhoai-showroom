@@ -1,0 +1,19 @@
+apiVersion: v1
+clusters:
+- cluster:
+    insecure-skip-tls-verify: true
+    server: https://api.ocp.sc7v2.sandbox195.opentlc.com:6443
+  name: api-ocp-sc7v2-sandbox195-opentlc-com:6443
+contexts:
+- context:
+    cluster: api-ocp-sc7v2-sandbox195-opentlc-com:6443
+    namespace: default
+    user: admin/api-ocp-sc7v2-sandbox195-opentlc-com:6443
+  name: default/api-ocp-sc7v2-sandbox195-opentlc-com:6443/admin
+current-context: default/api-ocp-sc7v2-sandbox195-opentlc-com:6443/admin
+kind: Config
+preferences: {}
+users:
+- name: admin/api-ocp-sc7v2-sandbox195-opentlc-com:6443
+  user:
+    token: sha256~q-k2Q8OMKKSKGv5LRgaEoONv-l5EWOtyDIIY8foP7s0

@@ -1,0 +1,138 @@
+# opencode agent (headless HTTP server). Image is filled by apply-opencode-agent.sh (internal registry or quay.io).
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: opencode-agent
+  namespace: user-cestay
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opencode-agent
+  namespace: user-cestay
+  labels:
+    app: opencode-agent
+    opendatahub.io/dashboard: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opencode-agent
+  template:
+    metadata:
+      labels:
+        app: opencode-agent
+        opendatahub.io/dashboard: "true"
+    spec:
+      serviceAccountName: opencode-agent
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: config
+          configMap:
+            name: opencode-config
+        - name: auth
+          secret:
+            secretName: opencode-auth
+            items:
+              - key: auth.json
+                path: auth.json
+      containers:
+        - name: opencode
+          image: image-registry.openshift-image-registry.svc:5000/USER-NS/opencode-agent:latest
+          imagePullPolicy: Always
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
+            - name: config
+              mountPath: /opt/app-secrets/opencode.jsonc
+              subPath: opencode.jsonc
+            - name: auth
+              mountPath: /opt/app-secrets/auth.json
+              subPath: auth.json
+          command: ["/bin/sh", "-c"]
+          args:
+            - >-
+              mkdir -p $HOME/.config/opencode $HOME/.local/share/opencode &&
+              cp /opt/app-secrets/opencode.jsonc $HOME/.config/opencode/ &&
+              cp /opt/app-secrets/auth.json $HOME/.local/share/opencode/ &&
+              exec /opt/app/node_modules/.bin/opencode serve --hostname 0.0.0.0 --port 4096 --cors https://app.opencode.ai
+          ports:
+            - containerPort: 4096
+              name: http
+          env:
+            - name: OPENCODE_SERVER_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: opencode-auth
+                  key: OPENCODE_SERVER_USERNAME
+                  optional: true
+            - name: OPENCODE_SERVER_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: opencode-auth
+                  key: OPENCODE_SERVER_PASSWORD
+                  optional: true
+            - name: ANTHROPIC_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: opencode-auth
+                  key: ANTHROPIC_API_KEY
+                  optional: true
+            - name: OPENAI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: opencode-auth
+                  key: OPENAI_API_KEY
+                  optional: true
+          readinessProbe:
+            httpGet:
+              path: /global/health
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /global/health
+              port: http
+            initialDelaySeconds: 30
+            periodSeconds: 30
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opencode-agent
+  namespace: user-cestay
+  labels:
+    app: opencode-agent
+spec:
+  selector:
+    app: opencode-agent
+  ports:
+    - name: http
+      port: 4096
+      targetPort: http
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: opencode-agent
+  namespace: user-cestay
+  labels:
+    app: opencode-agent
+spec:
+  to:
+    kind: Service
+    name: opencode-agent
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
