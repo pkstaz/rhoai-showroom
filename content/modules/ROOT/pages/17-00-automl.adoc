@@ -8,7 +8,7 @@ El run serio pide GPU o CPU grande; el lab deja el *pipeline server* y un CSV ir
 == Prerrequisitos
 
 * `aipipelines: Managed` (ya en el DSC)
-* OpenShift Pipelines (módulo 2)
+* xref:03-00-operators.adoc[OpenShift Pipelines] (Prerrequisitos, módulo 3)
 * Proyecto `llm`
 
 == Instalar (MinIO + DSPA)

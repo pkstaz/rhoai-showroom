@@ -1,0 +1,50 @@
+= Prerrequisitos: Operadores MaaS
+
+Antes de Habilitar MaaS, tres operadores de plataforma deben quedar `Succeeded`:
+
+* *cert-manager Operator for Red Hat OpenShift* — emite los certificados TLS que usa el stack de *Gateway API* / *AI Gateway* en las rutas de MaaS.
+* *Red Hat Connectivity Link* — capa de *Gateway API* + políticas (Kuadrant) delante del *AI Gateway*. Instalado solo como Operator (`openshift-operators`, All namespaces); el `GatewayClass` y la instancia Kuadrant van en xref:04-00-connectivity.adoc[GatewayClass y Kuadrant].
+* *Leader Worker Set Operator* — coordina pods *líder + workers* que *llm-d* usa al desplegar modelos (módulo 8).
+
+Los tres se instalaron como xref:03-00-operators.adoc[operadores de plataforma] (Prerrequisitos de *Instalar OpenShift AI*). Esta página es la verificación rápida antes de crear el `GatewayClass`.
+
+== Verificar
+
+`OK` = CSV `Succeeded`; `PENDIENTE` = aún no está o no terminó:
+
+[source,bash]
+----
+printf '%-42s %-14s\n' "OPERADOR" "ESTADO"
+printf '%-42s %-14s\n' "------------------------------------------" "--------------"
+check() {
+  local name="$1" pattern="$2"
+  local line phase
+  line=$(oc get csv -A --no-headers 2>/dev/null | grep -iE "$pattern" | head -1)
+  if [ -z "$line" ]; then
+    printf '%-42s %-14s\n' "$name" "PENDIENTE"
+  else
+    phase=$(echo "$line" | awk '{print $NF}')
+    if [ "$phase" = "Succeeded" ]; then
+      printf '%-42s %-14s\n' "$name" "OK"
+    else
+      printf '%-42s %-14s\n' "$name" "$phase"
+    fi
+  fi
+}
+check "cert-manager" "cert-manager"
+check "Connectivity Link" "connectivity"
+check "Leader Worker Set" "leaderworker|lws"
+----
+
+== Si falta alguno
+
+`apply-maas.sh` reinstala *Connectivity Link* y *Leader Worker Set* si faltan; *cert-manager no* — instálalo aparte:
+
+[source,bash]
+----
+oc apply -f manifests/operators/cert-manager/
+oc apply -f manifests/operators/connectivity-link/
+oc apply -f manifests/operators/leader-worker-set/
+----
+
+Espera `Succeeded` entre cada apply. Las advertencias de Authorino standalone y de canales valen igual aquí: xref:03-00-operators.adoc[Operadores de plataforma].

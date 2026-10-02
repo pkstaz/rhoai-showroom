@@ -1,8 +1,0 @@
-= Pre-requisitos
-
-Antes de instalar OpenShift AI, deja listos:
-
-. xref:02-00-operators.adoc[Operadores] de plataforma (TLS, Pipelines, Gateway/Kuadrant, llm-d, GPU Booking)
-. xref:02-01-monitoring.adoc[Monitoreo] de *user workloads* (métricas que usa el dashboard y Kueue)
-
-Hazlos en ese orden. Después sigue con xref:03-00-rhoai.adoc[Instalar OpenShift AI].

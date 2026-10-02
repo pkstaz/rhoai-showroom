@@ -42,7 +42,7 @@ bash manifests/apply-maas-observability.sh
 
 Espera CSVs `Succeeded`, LokiStack Ready y el patch de `usageLogging`. En un OpenTLC de 1 nodo puede tardar *10–20 min*.
 
-El script enciende *user-workload monitoring* primero (`enableUserWorkload: true`, pre-requisito de xref:02-01-monitoring.adoc[módulo 2]): sin él, RHOAI y Kueue no publican métricas y *Usage* se queda sin datos.
+El script enciende *user-workload monitoring* primero (`enableUserWorkload: true`, pre-requisito de xref:03-00-monitoring.adoc[Prerrequisitos → Monitoreo]): sin él, RHOAI y Kueue no publican métricas y *Usage* se queda sin datos.
 
 Si el script se corta en un `oc wait` (`no matching resources found`), vuelve a lanzarlo: es idempotente y el wait ahora espera a que aparezca el CSV.
 

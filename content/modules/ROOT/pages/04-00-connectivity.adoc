@@ -1,6 +1,6 @@
 = GatewayClass y Kuadrant
 
-El Operator de Connectivity Link ya quedó en `openshift-operators` (xref:02-00-operators.adoc[pre-requisitos]).
+El Operator de Connectivity Link ya quedó en `openshift-operators` (xref:03-00-operators.adoc[Prerrequisitos → Operadores de plataforma]).
 Aquí se crean el `GatewayClass` (cluster) y la instancia *Kuadrant* en **`kuadrant-system`**, base del *AI Gateway* / MaaS.
 
 == GatewayClass

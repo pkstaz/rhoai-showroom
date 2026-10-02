@@ -10,7 +10,7 @@
 #   bash rhoai-showroom/manifests/apply-maas.sh
 #
 # Flags:
-#   --skip-operator   Operadores pre-requisito ya instalados (modulo 2)
+#   --skip-operator   Operadores pre-requisito ya instalados (modulo 3, prerrequisitos)
 #
 # Idempotente: se puede re-ejecutar. Los manifiestos declarativos de este repo
 # son la fuente de verdad lista para GitOps:

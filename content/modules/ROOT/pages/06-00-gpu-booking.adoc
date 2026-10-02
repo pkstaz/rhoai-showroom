@@ -1,6 +1,6 @@
 = GPU Booking Plugin
 
-Plugin de consola para reservar GPUs. Descubre capacidad desde `nvidia.com/gpu`. Requiere Kueue.
+Plugin de consola para reservar GPUs. Descubre capacidad desde `nvidia.com/gpu`. Requiere Kueue (xref:03-00-operators.adoc[Prerrequisitos → Operadores de plataforma]).
 
 Repo: https://github.com/rhai-code/gpu-booking-app-plugin
 

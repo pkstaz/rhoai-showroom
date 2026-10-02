@@ -3,7 +3,7 @@
 == Qué es OpenShift AI
 
 *Red Hat OpenShift AI* es la plataforma de MLOps sobre OpenShift: workbenches, pipelines, serving, Model Catalog y *Models as a Service* (MaaS) en un solo control plane.
-En este lab instalas la edición *Self-Managed* {rhoai-version} (canal `stable-3.5`) sobre el cluster vacío, después de los xref:02-00-prerequisites.adoc[pre-requisitos].
+En este lab instalas la edición *Self-Managed* {rhoai-version} (canal `stable-3.5`) sobre el cluster vacío, después de activar los xref:03-00-operators.adoc[prerrequisitos: operadores de plataforma] y el xref:03-00-monitoring.adoc[monitoreo de user workloads].
 
 == Documentación oficial
 
@@ -13,9 +13,11 @@ En este lab instalas la edición *Self-Managed* {rhoai-version} (canal `stable-3
 
 == Pasos de este módulo
 
+. xref:03-00-operators.adoc[Prerrequisitos: Operadores de plataforma]
+. xref:03-00-monitoring.adoc[Prerrequisitos: Monitoreo]
 . xref:03-01-operator.adoc[Operator]
 . xref:03-02-dsc.adoc[DataScienceCluster]
 . xref:03-03-odh-dashboard.adoc[ODHDashboardConfig]
 . xref:03-04-hardware-profile-cpu.adoc[Hardware profile CPU]
 
-El monitoreo de user workloads ya quedó en xref:02-01-monitoring.adoc[Pre-requisitos → Monitoreo].
+El monitoreo de user workloads ya quedó en xref:03-00-monitoring.adoc[Prerrequisitos → Monitoreo].

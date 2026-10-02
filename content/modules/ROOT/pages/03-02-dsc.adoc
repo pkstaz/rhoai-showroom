@@ -1,7 +1,7 @@
 = DataScienceCluster
 
 El `DataScienceCluster` (`default-dsc`) activa los componentes de OpenShift AI que usa este lab.
-Deja en `Managed` solo lo necesario; el resto queda `Removed` (o `Unmanaged` en el caso de Kueue, que ya instalaste como Operator en pre-requisitos).
+Deja en `Managed` solo lo necesario; el resto queda `Removed` (o `Unmanaged` en el caso de Kueue, que ya instalaste como Operator en xref:03-00-operators.adoc[Prerrequisitos → Operadores de plataforma]).
 
 NOTE: `ogx` en `Managed` es requisito del *Gen AI Studio → Playground*. Sin OGX, la UI puede listar endpoints pero no ofrece Playground.
 

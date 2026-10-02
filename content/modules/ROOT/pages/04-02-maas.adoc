@@ -15,7 +15,7 @@ Un script resuelve el módulo completo en orden: operadores pre-requisito si fal
 bash manifests/apply-maas.sh
 ----
 
-Con el operador ya instalado (xref:02-00-operators.adoc[módulo 2]):
+Con el operador ya instalado (xref:04-01-operators-maas.adoc[Prerrequisitos → Operadores MaaS]):
 
 [source,bash]
 ----

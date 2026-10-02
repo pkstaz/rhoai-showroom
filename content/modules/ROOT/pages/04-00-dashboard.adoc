@@ -6,5 +6,6 @@ Los flags del dashboard (`ODHDashboardConfig`) ya se configuraron en xref:03-03-
 
 Instalar todo el módulo de una vez: `bash manifests/apply-maas.sh` (xref:04-02-maas.adoc[detalles y uso desde otros proyectos]).
 
+* xref:04-01-operators-maas.adoc[Prerrequisitos: Operadores MaaS]
 * xref:04-00-connectivity.adoc[GatewayClass y Kuadrant]
 * xref:04-02-maas.adoc[Postgres, Gateway y modelsAsAService]
