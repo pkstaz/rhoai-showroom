@@ -1,6 +1,6 @@
 {
   "name": "opencode-agents",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "OpenShift Console plugin: gestion de agentes OpenCode (entornos) del workshop RHOAI",
   "private": true,
   "type": "module",
@@ -11,14 +11,14 @@
   },
   "consolePlugin": {
     "name": "opencode-agents",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "displayName": "OpenCode Agents",
     "description": "Gestion de agentes OpenCode (entornos) del workshop RHOAI Showroom",
     "exposedModules": {
       "AgentsPage": "./components/AgentsPage"
     },
     "dependencies": {
-      "@console/pluginAPI": ">=5.0.0-0 || >=4.23.0-0"
+      "@console/pluginAPI": "*"
     }
   },
   "devDependencies": {
