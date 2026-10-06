@@ -4,7 +4,7 @@ CAUTION: *WIP* (Work in Progress). Este módulo aún NO se valida en lab; los pa
 
 El CR sigue siendo `NemoGuardrails`. Aquí NeMo *habla con un modelo* OpenAI-compatible (`engine: openai`) y aplica rails de input *y* output.
 
-El Qwen CPU del módulo 8 basta. GPU solo si apuntas a un vLLM CUDA (mismo patrón, otra `openai_api_base`).
+El modelo CPU del módulo 8 basta. GPU solo si apuntas a un vLLM CUDA (mismo patrón, otra `openai_api_base`).
 
 `/v1/chat/completions` de NeMo **no** es un proxy transparente: puede recortar el payload. Para tool calling usa `/v1/guardrail/checks` + el endpoint MaaS por separado.
 

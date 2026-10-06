@@ -49,7 +49,7 @@ phase=$(oc get maasmodelref qwen3-06b -n llm -o jsonpath='{.status.phase}' 2>/de
   || printf '%-42s %-12s\n' "MaaSModelRef/qwen3-06b" "${phase:-PENDIENTE}"
 ----
 
-IMPORTANT: El nombre `qwen-authenticated` es el que usa el módulo 10 al pedir la API key de Qwen.
+IMPORTANT: El nombre `qwen-authenticated` es el que usa el módulo 10 al pedir la API key del modelo.
 
 == Otras rutas (módulo 8)
 

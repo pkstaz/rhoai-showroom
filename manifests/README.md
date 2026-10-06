@@ -16,7 +16,7 @@ Run `oc apply` / scripts from the **repo root**.
 | `apply-maas-gateway.sh` | MaaS Gateway |
 | `model-catalog-qwen.yaml` | Model Catalog (HF) |
 | `fake-gpu-values.yaml` | Fake GPU topology |
-| `hardware-profile-cpu.yaml` | CPU hardware profile `cpu-workshop` (module 3)
+| `hardware-profile-cpu.yaml` | CPU hardware profile `cpu-workshop` (module 8.1)
 | `hardware-profile-nvidia.yaml` | GPU profile `nvidia-gpu` (module 5 NVIDIA)
 | `fake-gpu-dashboard/` | DCGM Grafana dashboard + ServiceMonitor for Fake GPU (module 5)
 | `llminferenceservice-qwen3-06b.yaml` | llm-d CPU + MaaSModelRef (module 8.1) |

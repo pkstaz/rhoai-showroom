@@ -36,7 +36,7 @@ oc get cm gen-ai-aa-mcp-servers -n redhat-ods-applications -o yaml
 * *Gen AI studio → AI asset endpoints* → pestaña *MCPs* → `OpenShift-MCP`
 * Playground → pestaña *MCP* → checkbox + View tools. Pregunta: `How many pods in namespace llm?`
 
-Qwen 0.6B es flojo para tool calling. El valor del lab es *ver el MCP en AI assets*; un modelo con `--enable-auto-tool-choice` (GPU) usa las tools de verdad.
+El modelo del lab es flojo para tool calling. El valor del lab es *ver el MCP en AI assets*; un modelo con `--enable-auto-tool-choice` (GPU) usa las tools de verdad.
 
 == GAP
 

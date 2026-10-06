@@ -14,7 +14,5 @@ asciidoc:
     page-links:
       - url: https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.5
         text: Docs RHOAI 3.5
-      - url: https://huggingface.co/Qwen/Qwen3-0.6B
-        text: Qwen3-0.6B
       - url: https://github.com/run-ai/fake-gpu-operator
         text: Fake GPU

@@ -3,8 +3,42 @@
 Qwen en *CPU* con un manifiesto limpio (sin wizard): `LLMInferenceService` + `MaaSModelRef`.
 Queda visible en el AI Hub / Gen AI Studio (*AI asset endpoints*) y publicado en MaaS.
 
-Requisitos: MaaS encendido (módulo 4), profile `cpu-workshop` (módulo 3), gateway `maas-default-gateway`.
+Requisitos: MaaS encendido (módulo 4), gateway `maas-default-gateway` y el hardware profile `cpu-workshop` de abajo.
 Manifiesto: `manifests/llminferenceservice-qwen3-06b.yaml`.
+
+== Hardware profile `cpu-workshop`
+
+El `LLMInferenceService` se ancla a un hardware profile. Créalo *después* del Operator, el `DataScienceCluster` y el `ODHDashboardConfig` (módulo 3), cuando ya exista el namespace `redhat-ods-applications`.
+
+[cols="1,2"]
+|===
+|Campo |Valor
+
+|Nombre
+|`cpu-workshop`
+
+|Namespace
+|`redhat-ods-applications`
+
+|CPU
+|min 1, default 2, max 2
+
+|Memory
+|min 2Gi, default 8Gi, max 8Gi
+
+|GPU
+|ninguna
+|===
+
+Instalar por terminal:
+
+[source,bash]
+----
+oc apply -f manifests/hardware-profile-cpu.yaml
+oc get hardwareprofile cpu-workshop -n redhat-ods-applications
+----
+
+En el dashboard: *Settings* → *Hardware profiles* → debe aparecer `cpu-workshop`.
 
 == Qué crea el manifiesto
 

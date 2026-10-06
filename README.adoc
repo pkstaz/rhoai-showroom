@@ -1,6 +1,6 @@
 = OpenShift AI 3.5
 
-Workshop Showroom: instala OpenShift AI 3.5.1, MaaS, fake/real GPU, GPU Booking, publica Qwen3-0.6B en CPU con llm-d, y continúa con FinOps, guardrails, registry, AutoML/AutoRAG, Prompt Registry, MCP, AgentOps, Skills y Garak/ART.
+Workshop Showroom: instala OpenShift AI 3.5.1, MaaS, fake/real GPU, GPU Booking, publica un modelo LLM en CPU con llm-d, y continúa con FinOps, guardrails, registry, AutoML/AutoRAG, Prompt Registry, MCP, AgentOps, Skills y Garak/ART.
 
 * Lab (GitHub Pages): https://pkstaz.github.io/rhoai-showroom/modules/00-00-intro.html
 * Instalación: **comando / `oc apply` primero**; UI al final de cada módulo

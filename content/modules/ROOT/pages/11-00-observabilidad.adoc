@@ -159,7 +159,7 @@ NOTE: El panel *Usage* es *Technology Preview* en RHOAI 3.5. Sirve para *showbac
 *No* es un motor de billing con precio en dólares por token: eso no está en la subscription ni en el dashboard GA.
 Para coste operativo en el lab usa rate limits (módulo 9) + Usage/Loki.
 
-IMPORTANT: *GPU utilization* = *No data* es normal en este lab. El `{qwen-model}` corre con imagen **vLLM CPU** (`rhaii/vllm-cpu-rhel9`) y **sin** `nvidia.com/gpu` en el `LLMInferenceService`. Fake/NVIDIA GPU (módulo 5) y DCGM están para perfiles/hardware; no alimentan el panel de GPU de este serving. Mira tokens, latencia y logs de usage en su lugar.
+IMPORTANT: *GPU utilization* = *No data* es normal en este lab. El modelo del serving corre con imagen **vLLM CPU** (`rhaii/vllm-cpu-rhel9`) y **sin** `nvidia.com/gpu` en el `LLMInferenceService`. Fake/NVIDIA GPU (módulo 5) y DCGM están para perfiles/hardware; no alimentan el panel de GPU de este serving. Mira tokens, latencia y logs de usage en su lugar.
 
 Si desplegaras el mismo modelo con imagen CUDA + request de GPU (real o fake), ahí sí aparecerían series DCGM.
 

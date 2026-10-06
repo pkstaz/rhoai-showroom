@@ -1,4 +1,4 @@
-= Desplegar modelo — externo (TMM)
+= Desplegar modelo — externo
 
 CAUTION: *WIP* (Work in Progress). Este módulo aún NO se valida en lab; los pasos pueden cambiar.
 
@@ -15,7 +15,7 @@ El instructor entrega en *cada sala* tres valores. No los subas a git.
 |Id que espera el proveedor (`gpt-oss-20b`, `granite-…`, `publishers/…/models/…`).
 
 |`ENDPOINT` (o `TMM_ENDPOINT`)
-|URL OpenAI-compatible, p. ej. `https://maas.apps.tmm.example.com/v1`.
+|URL OpenAI-compatible, p. ej. `https://maas-rhdp.apps.maas.redhatworkshops.io/v1`.
 
 |`API_KEY` (o `TMM_API_KEY`)
 |Bearer del proveedor TMM. Cambia por lab; re-ejecuta el script para rotarla.

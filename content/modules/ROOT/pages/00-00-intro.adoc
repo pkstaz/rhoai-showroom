@@ -1,10 +1,10 @@
 = Introducción
 
-Este workshop instala *OpenShift AI {rhoai-version}* en un cluster vacío y deja un modelo *{qwen-model}* publicado en *Models as a Service* (MaaS), servido con *llm-d* en CPU. Después del vertical slice (módulos 1–11) habilita FinOps, guardrails, registry, AutoML/AutoRAG, Prompt Registry, MCP, AgentOps y el plugin de Skills.
+Este workshop instala *OpenShift AI {rhoai-version}* en un cluster vacío y deja un modelo LLM publicado en *Models as a Service* (MaaS), servido con *llm-d* en CPU. Después del vertical slice (módulos 1–11) habilita FinOps, guardrails, registry, AutoML/AutoRAG, Prompt Registry, MCP, AgentOps y el plugin de Skills.
 
 CAUTION: Los módulos *8.2 GPU*, *8.3 modelo externo* y *12–22* están en *WIP* (Work in Progress): aún no se validan en lab y pueden cambiar.
 
-El fake GPU no ejecuta CUDA. Sirve para que el cluster anuncie `nvidia.com/gpu` (perfiles, GPU Booking). La inferencia de Qwen corre en CPU. Guardrails, AutoRAG y AgentOps tienen *ruta CPU* y *ruta GPU* cuando el cluster las tiene.
+El fake GPU no ejecuta CUDA. Sirve para que el cluster anuncie `nvidia.com/gpu` (perfiles, GPU Booking). La inferencia corre en CPU. Guardrails, AutoRAG y AgentOps tienen *ruta CPU* y *ruta GPU* cuando el cluster las tiene.
 
 == Tiempo
 
@@ -23,8 +23,8 @@ Los waits largos son el Operator de OpenShift AI, la carga del modelo y (si hay 
 . GPU opcional: NVIDIA GPU Operator y/o Fake GPU (menús independientes en el módulo 5)
 . GPU Config Plugin (solo Fake) y/o MIG nativo (NVIDIA real)
 . GPU Booking Console Plugin
-. {qwen-model} en el Model Catalog
-. Desplegar modelo: CPU (Qwen llm-d), GPU (vLLM CUDA) y/o externo TMM (xref:08-00-deploy.adoc[módulo 8])
+. Un modelo en el Model Catalog
+. Desplegar modelo: CPU (llm-d), GPU (vLLM CUDA) y/o externo TMM (xref:08-00-deploy.adoc[módulo 8])
 . Vista inicial de observabilidad MaaS (COO / Perses / usage dashboards — xref:11-00-observabilidad.adoc[módulo 11])
 . Smoke de evaluación con EvalHub (xref:12-00-evalhub.adoc[módulo 12]) + Garak / ART (xref:12-01-garak.adoc[12.1])
 . NemoGuardrails (CPU Presidio/regex; opcional proxy MaaS / GPU)
@@ -34,7 +34,7 @@ Los waits largos son el Operator de OpenShift AI, la carga del modelo y (si hay 
 . AgentOps: catálogo + *Save as new agent* en Playground (A2A `workshop-faq` opcional)
 . Console plugin de Skills
 
-*Gen AI Studio → AI asset endpoints* (proyecto `llm`) debe listar: *Models* (Qwen), *MCPs*, *Vector stores* y *Agents*.
+*Gen AI Studio → AI asset endpoints* (proyecto `llm`) debe listar: *Models*, *MCPs*, *Vector stores* y *Agents*.
 
 Los YAML de `manifests/` se clonan en el Web Terminal **después** de entrar como `admin` (módulo 1).
 

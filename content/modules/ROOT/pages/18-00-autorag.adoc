@@ -54,17 +54,17 @@ Dashboard:
 
 == Playground RAG (CPU)
 
-. Playground → modelo Qwen MaaS
+. Playground → modelo MaaS
 . *Knowledge* → upload `policy.md` (inline) **o** el store `workshop-pgvector` si OGX ya indexó
 . Pregunta: `Does fake GPU run CUDA?`
 
-El modelo 0.6B alucina; el valor del lab es *ver el store en AI assets*, no un RAG de producción.
+El modelo del lab alucina; el valor del lab es *ver el store en AI assets*, no un RAG de producción.
 
 == Optimization (solo GPU)
 
 UI: *Gen AI studio → AutoRAG*. Connection OGX (base URL + API key del `OGXServer`). Vector DB = pgvector. Documentos = bucket `autorag`. Test JSON = `testdata.json`. Preset Lightweight.
 
-Foundation models necesitan tool calling en vLLM. Qwen CPU del módulo 8 *no* es un buen generador AutoRAG.
+Foundation models necesitan tool calling en vLLM. El modelo CPU del módulo 8 *no* es un buen generador AutoRAG.
 
 == GAP
 

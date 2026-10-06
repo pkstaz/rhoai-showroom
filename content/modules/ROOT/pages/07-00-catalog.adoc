@@ -1,4 +1,4 @@
-= Añadir Qwen3-0.6B al Model Catalog
+= Añadir un modelo al Model Catalog
 
 Fuente Hugging Face, *un solo modelo*: `{qwen-model}`.
 

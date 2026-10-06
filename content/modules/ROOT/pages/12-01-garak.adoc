@@ -20,10 +20,10 @@ En OpenShift AI 3.5 **no hay un CRD Chatterbox**. Red Hat integró Chatterbox La
 
 |ART `intents` (`garak-kfp`)
 |Chatterbox: SDG de prompts + juez + estrategias (SPO → TAP). Technology Preview.
-|Sí: xref:17-00-automl.adoc[pipeline server] + juez. Qwen 0.6B como juez es *GAP*.
+|Sí: xref:17-00-automl.adoc[pipeline server] + juez. El modelo CPU del lab como juez es *GAP*.
 |===
 
-El scan apunta al *endpoint* que le pases: TMM (xref:08-03-deploy-external.adoc[8.3]), Qwen MaaS, o la Route de xref:14-00-guardrails.adoc[NemoGuardrails].
+El scan apunta al *endpoint* que le pases: TMM (xref:08-03-deploy-external.adoc[8.3]), el MaaS local, o la Route de xref:14-00-guardrails.adoc[NemoGuardrails].
 
 == Habilitar
 
@@ -46,9 +46,9 @@ oc get evalhub evalhub -n evalhub -o jsonpath='{.spec.providers}{"\n"}'
 
 Hard refresh de *Develop & train → Evaluations*.
 
-== Secret (TMM o Qwen)
+== Secret (TMM o MaaS local)
 
-El job monta el Secret en `evalhub`. Preferido: `tmm-api-key` del módulo 8.3 (el script ya lo copia). Si solo hay Qwen:
+El job monta el Secret en `evalhub`. Preferido: `tmm-api-key` del módulo 8.3 (el script ya lo copia). Si solo hay modelo MaaS local:
 
 [source,bash]
 ----
@@ -67,13 +67,13 @@ SUBMIT=1 bash manifests/apply-garak.sh
 
 O UI: *Evaluations* → proyecto `llm` → *Start evaluation run* → provider *Garak* → *Quick* → `MODEL_ID` / `ENDPOINT` / `API_KEY_SECRET` del 8.3 (TMM) o del 12.
 
-Primera vez el pod baja la imagen Garak (minutos en *Pending*). Métrica: `attack_success_rate` (más bajo = más seguro). Qwen 0.6B en CPU *no* es un modelo alineado: espera ASR alto. Eso es el punto del lab.
+Primera vez el pod baja la imagen Garak (minutos en *Pending*). Métrica: `attack_success_rate` (más bajo = más seguro). El modelo CPU del lab *no* es un modelo alineado: espera ASR alto. Eso es el punto del lab.
 
 == Opcional — ART / Chatterbox (`intents`)
 
 Prerrequisitos: `bash manifests/apply-pipelines.sh` (DSPA + MinIO `pipeline-minio` en `llm`).
 
-El lab recorta TAP y traducción. Un solo probe `spo.SPOIntent` y `generations: 1`. Juez y SDG = el mismo Qwen MaaS (no es el juez de Prd).
+El lab recorta TAP y traducción. Un solo probe `spo.SPOIntent` y `generations: 1`. Juez y SDG = el mismo modelo MaaS local (no es el juez de Prd).
 
 [source,bash]
 ----
@@ -97,7 +97,7 @@ Tras el módulo 14, cambia `ENDPOINT` a la Route `workshop` (`/v1`) y vuelve a `
 | Profile `quick` (un probe)
 | OWASP / AVID en CI + umbral de promotion
 
-| Mismo Qwen 0.6B como target, juez y SDG
+| El mismo modelo como target, juez y SDG
 | Juez y atacante separados; GPU
 
 | ART recortado (sin TAP / traducción)

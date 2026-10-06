@@ -2,7 +2,7 @@
 
 CAUTION: *WIP* (Work in Progress). Este módulo aún NO se valida en lab; los pasos pueden cambiar.
 
-Prueba de calidad tras xref:11-00-observabilidad.adoc[observabilidad MaaS]. Preferido: modelo TMM del xref:08-03-deploy-external.adoc[módulo 8.3]. Fallback: Qwen CPU (módulo 8.1) + subscription del módulo 9.
+Prueba de calidad tras xref:11-00-observabilidad.adoc[observabilidad MaaS]. Preferido: modelo TMM del xref:08-03-deploy-external.adoc[módulo 8.3]. Fallback: el modelo CPU (módulo 8.1) + subscription del módulo 9.
 
 Este módulo deja *Develop & train → Evaluations* usable desde la web (TrustyAI + MLflow + EvalHub).
 
@@ -126,7 +126,7 @@ printf '└───────────────────────
 
 Rotar la key de esta sala: `MODE=key API_KEY='…' bash manifests/apply-external-model.sh`.
 
-=== Fallback — Qwen MaaS local
+=== Fallback — MaaS local
 
 Solo si *no* hay TMM. Secret con la API key MaaS (clave `OPENAI_API_KEY`):
 
@@ -182,7 +182,7 @@ oc get cm evalhub-discovery -n llm
 Hard refresh del dashboard tras ver el ConfigMap.
 
 . Dashboard → *Develop & train* → *Experiments (MLflow)* → proyecto **`llm`** (no `evalhub`)
-. Crea un experimento, p. ej. `qwen-smoke`
+. Crea un experimento, p. ej. `smoke-eval`
 . *Develop & train* → *Evaluations* → proyecto **`llm`** → *Start evaluation run*
 . Benchmark: *Helpfulness, honesty & harmlessness (HHH)*. En *Benchmark parameters* incluye el tokenizer HF (el id MaaS *no* sirve como tokenizer):
 
@@ -192,7 +192,7 @@ Hard refresh del dashboard tras ver el ConfigMap.
 ----
 
 . *MLflow experiment*: el que creaste
-. *Source*: external — usa `MODEL_ID`, `ENDPOINT` y `API_KEY_SECRET` (TMM del 8.3, o Qwen local)
+. *Source*: external — usa `MODEL_ID`, `ENDPOINT` y `API_KEY_SECRET` (TMM del 8.3, o el modelo local)
 . *Evaluate*
 
 La UI puede quedarse en *Pending* unos minutos la *primera* vez: el pod descarga `odh-ta-lmes-job` (~7 GB). Luego pasa a *Running* / *Completed* (smoke ~5–15 min en OpenTLC). *Experiments (MLflow)* para ver métricas.

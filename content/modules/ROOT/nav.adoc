@@ -8,7 +8,6 @@
 ** xref:03-01-operator.adoc[OpenShift AI Operator]
 ** xref:03-02-dsc.adoc[DataScienceCluster]
 ** xref:03-03-odh-dashboard.adoc[ODHDashboardConfig]
-** xref:03-04-hardware-profile-cpu.adoc[Hardware profile CPU]
 * xref:04-00-dashboard.adoc[4. Habilitar MaaS]
 ** xref:04-01-operators-maas.adoc[Prerrequisitos: Operadores MaaS]
 ** xref:04-00-connectivity.adoc[GatewayClass y Kuadrant]

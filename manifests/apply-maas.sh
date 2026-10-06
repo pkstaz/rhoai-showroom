@@ -5,18 +5,11 @@
 #   -> Gateway maas-default-gateway -> modelsAsAService: Managed en el DSC
 #   -> auto-fix Authorino (service CA + gRPC TLS) + smoke test /maas-api.
 #
-# Uso desde otro proyecto (con oc login ya hecho en el cluster):
-#   git clone git@github.com:pkstaz/rhoai-showroom.git
-#   bash rhoai-showroom/manifests/apply-maas.sh
-#
 # Flags:
 #   --skip-operator   Operadores pre-requisito ya instalados (modulo 4, prerrequisitos)
 #
-# Idempotente: se puede re-ejecutar. Los manifiestos declarativos de este repo
-# son la fuente de verdad lista para GitOps:
-#   oc apply -k rhoai-showroom/manifests/maas   (GatewayClass + Kuadrant + Postgres)
-# El Gateway y el DSC dependen de valores del cluster (dominio, certificado,
-# nombre del DSC); para GitOps pasarian a ser valores parametrizados.
+# Idempotente: se puede re-ejecutar. Ejecutar desde la raiz del repo (oc login ya hecho):
+#   bash manifests/apply-maas.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -117,9 +110,38 @@ oc wait --for=condition=Ready "$DSC" --timeout=15m || \
 #                available sources are shown.
 # Causa: Envoy habla TLS con Authorino :50051 y el listener esta en plaintext
 # (ademas falta el service CA para que Authorino valide maas-api HTTPS).
+
+# oc wait --for=condition=Available falla al instante con NotFound si el
+# deployment aun no existe; hay que esperar primero a que aparezca.
+wait_deploy_available() {
+  local ns="$1" name="$2" i=""
+  for i in $(seq 1 30); do
+    if oc get "deploy/${name}" -n "$ns" >/dev/null 2>&1; then
+      oc wait -n "$ns" --for=condition=Available "deploy/${name}" --timeout=10m >/dev/null 2>&1 \
+        && { echo "deploy/${name}: Available"; return 0; }
+      return 1
+    fi
+    echo "esperando deploy/${name} en $ns (try $i/30)"; sleep 10
+  done
+  return 1
+}
+
 echo "=== maas-api / maas-controller (redhat-ods-applications) ==="
-oc wait -n redhat-ods-applications --for=condition=Available deploy/maas-api --timeout=10m || true
-oc wait -n redhat-ods-applications --for=condition=Available deploy/maas-controller --timeout=10m || true
+wait_deploy_available redhat-ods-applications maas-api || {
+  echo "ERROR: deploy/maas-api no aparecio / no quedo Available en redhat-ods-applications."
+  echo "Diagnostico rapido:"
+  echo "--- pods redhat-ods-applications ---"
+  oc get pods -n redhat-ods-applications 2>/dev/null | head -20 || true
+  echo "--- DSC aigateway (spec / status) ---"
+  oc get "${DSC}" -o jsonpath='{.spec.components.aigateway}{"\n"}' 2>/dev/null || true
+  oc get "${DSC}" -o jsonpath='{.status.components.aigateway}{"\n"}' 2>/dev/null || true
+  echo "--- logs del operador RHOAI (lineas con maas) ---"
+  oc logs -n redhat-ods-operator deploy/rhods-controller --tail=200 2>/dev/null \
+    | grep -i maas | tail -15 || echo "(no se pudieron leer los logs del operador)"
+  exit 1
+}
+wait_deploy_available redhat-ods-applications maas-controller || \
+  echo "WARN: deploy/maas-controller no quedo Available (revisa pods)"
 
 CLUSTER_DOMAIN=$(oc get ingresses.config/cluster -o jsonpath='{.spec.domain}')
 
@@ -205,6 +227,7 @@ else
   else
     echo "ERROR: maas-api sigue devolviendo no-JSON:"
     echo "${RESP:0:200}"
+    echo "Pista: revisa los pods de maas-api en redhat-ods-applications y los logs de authorino (kuadrant-system)."
     exit 1
   fi
 fi

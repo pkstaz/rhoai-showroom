@@ -17,7 +17,7 @@ En OpenShift AI 3.5 el CRD nativo es `NemoGuardrails` (`trustyai.opendatahub.io/
 |No. Siempre.
 
 |xref:14-02-guardrails-gpu.adoc[Con LLM / GPU]
-|Mismo CR; `engine: openai` hacia MaaS Qwen (CPU) o un vLLM CUDA. `/v1/chat/completions` con rails de input y output.
+|Mismo CR; `engine: openai` hacia el modelo MaaS (CPU) o un vLLM CUDA. `/v1/chat/completions` con rails de input y output.
 |Opcional (solo si el *modelo* corre en GPU).
 |===
 

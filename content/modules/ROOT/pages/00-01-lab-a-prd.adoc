@@ -47,10 +47,10 @@ En *Lab* usamos un cluster efímero y un modelo pequeño en CPU. En *Prd* el mis
 | OpenShift AI {rhoai-version}, monitoring, Kueue, operadores previos
 
 | Catálogo
-| Model Catalog + {qwen-model}
+| Model Catalog con un modelo LLM
 
 | Serving
-| xref:08-00-deploy.adoc[Módulo 8]: CPU (Qwen), GPU (vLLM CUDA) y/o modelo externo TMM
+| xref:08-00-deploy.adoc[Módulo 8]: CPU, GPU (vLLM CUDA) y/o modelo externo TMM
 
 | AI Gateway / MaaS
 | GatewayClass, Kuadrant, Postgres, gateway, subscriptions, auth policies
@@ -94,7 +94,7 @@ En *Lab* usamos un cluster efímero y un modelo pequeño en CPU. En *Prd* el mis
 | Clusters dedicados dev / staging / prod
 
 | Modelo
-| HF Qwen 0.6B CPU; GPU y/o TMM externo (módulo 8)
+| Modelo LLM en CPU; GPU y/o TMM externo (módulo 8)
 | Modelos validados, versionados, firmados
 
 | Credenciales
@@ -181,7 +181,7 @@ Estas son las áreas de evaluación de salida del lab. Con cada cliente, marca e
 == Qué sigue en el lab hands-on
 
 . xref:01-00-web-terminal.adoc[Web Terminal] — entrar como `admin` y clonar el repo
-. Módulos 2–10 — instalar la plataforma y dejar Qwen publicado en MaaS
+. Módulos 2–10 — instalar la plataforma y dejar un modelo publicado en MaaS
 . xref:11-00-observabilidad.adoc[Observabilidad MaaS] — después de probar inferencia
 . xref:12-00-evalhub.adoc[EvalHub] — después de observabilidad (*WIP* desde aquí)
 . xref:12-01-garak.adoc[Garak / red team] — después de EvalHub (ART opcional tras pipelines)

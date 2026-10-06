@@ -24,7 +24,7 @@ Menús independientes (puedes hacer uno, los dos o ninguno):
 |Puedes *ambos*: NVIDIA en GPU; Fake solo en workers CPU.
 
 |Sin GPU / sin Fake
-|Omite ambos. Qwen usa `cpu-workshop`.
+|Omite ambos. El modelo CPU usa `cpu-workshop`.
 |===
 
 IMPORTANT: *Nunca* instales Fake GPU en un nodo que ya tenga GPU NVIDIA (mismo nodo = conflicto). La GPU real puede estar en un *control-plane compacto* (`g6.*` / `NVIDIA-L4`, etc.): identifícala por `allocatable["nvidia.com/gpu"]`, no por el nombre del MachineSet.

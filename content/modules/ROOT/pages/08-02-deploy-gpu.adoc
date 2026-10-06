@@ -54,7 +54,7 @@ Primera vez: pull de pesos HF + imagen CUDA (10–20 min en L4).
 
 == Subscription
 
-El módulo 9 cubre Qwen3-0.6B. Para este modelo:
+El módulo 9 cubre el modelo CPU. Para este modelo:
 
 [source,bash]
 ----

@@ -57,4 +57,4 @@ curl -sk -X POST "${GUARDRAILS_ROUTE}/v1/guardrail/checks" \
 
 == Siguiente
 
-xref:14-02-guardrails-gpu.adoc[Con LLM]: el mismo CR delante de MaaS Qwen (`/v1/chat/completions`).
+xref:14-02-guardrails-gpu.adoc[Con LLM]: el mismo CR delante del modelo MaaS (`/v1/chat/completions`).

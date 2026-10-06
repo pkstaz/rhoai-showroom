@@ -36,7 +36,7 @@ Si imprime `null`, la subscription no existe, el nombre no coincide, o el POST d
 
 == Listar modelos y chatear
 
-IMPORTANT: El Qwen CPU del lab tiene `max_model_len=2048`. Pide **`max_tokens` ≤ 1024** (64 en smoke). Con 4096 verás `invalid_prompt` / `max_tokens cannot be greater than max_model_len`.
+IMPORTANT: El modelo CPU del lab tiene `max_model_len=2048`. Pide **`max_tokens` ≤ 1024** (64 en smoke). Con 4096 verás `invalid_prompt` / `max_tokens cannot be greater than max_model_len`.
 
 [source,bash]
 ----
@@ -85,7 +85,7 @@ Tienes:
 
 * OpenShift AI {rhoai-version}
 * Fake GPU + GPU Booking
-* {qwen-model} en catalog
+* Modelo en catalog
 * llm-d CPU detrás de MaaS
 * Suscripción para usuarios autenticados
 * Inferencia vía API key y Playground

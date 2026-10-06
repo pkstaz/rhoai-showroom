@@ -2,7 +2,7 @@
 
 CAUTION: *WIP* (Work in Progress). Este módulo aún NO se valida en lab; los pasos pueden cambiar.
 
-El DSC ya tiene `modelregistry: Managed` (namespace `rhoai-model-registries`). Este módulo crea *una instancia* de lab (Postgres efímero). No sustituye Hugging Face del módulo 7: el serving sigue siendo `hf://Qwen/Qwen3-0.6B`.
+El DSC ya tiene `modelregistry: Managed` (namespace `rhoai-model-registries`). Este módulo crea *una instancia* de lab (Postgres efímero). No sustituye Hugging Face del módulo 7: el serving sigue tirando del catálogo HF.
 
 Firma Cosign / promotion GitOps = GAP (tabla 0.1).
 
@@ -39,7 +39,7 @@ oc get modelregistry,pods -n rhoai-model-registries
 == Qué hacer en el lab
 
 . Abrir el registry `workshop`
-. Registrar *metadata* de Qwen (nombre, versión `0.6b-cpu-lab`, origen HF) — no hace falta re-subir pesos
+. Registrar *metadata* del modelo (nombre, versión de lab, origen HF) — no hace falta re-subir pesos
 . Contraste: catálogo HF (descubrimiento) vs registry (gobierno de versiones)
 
 == GAP

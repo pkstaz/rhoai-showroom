@@ -59,7 +59,7 @@ Para que *AI asset endpoints → Agents* liste un servicio, no basta *Save as ne
 
 [source,bash]
 ----
-# Opcional: inyectar MaaS para que el agente llame a Qwen
+# Opcional: inyectar MaaS para que el agente llame al modelo
 export MAAS_URL="https://maas.$(oc get ingresses.config/cluster -o jsonpath='{.spec.domain}')"
 export API_KEY   # del módulo 10
 export MODEL_ID=publishers/llm/models/qwen3-06b

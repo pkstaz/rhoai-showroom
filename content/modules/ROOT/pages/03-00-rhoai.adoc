@@ -18,6 +18,6 @@ En este lab instalas la edición *Self-Managed* {rhoai-version} (canal `stable-3
 . xref:03-01-operator.adoc[OpenShift AI Operator]
 . xref:03-02-dsc.adoc[DataScienceCluster]
 . xref:03-03-odh-dashboard.adoc[ODHDashboardConfig]
-. xref:03-04-hardware-profile-cpu.adoc[Hardware profile CPU]
 
 El monitoreo de user workloads ya quedó en xref:03-00-monitoring.adoc[Prerrequisitos → Monitoreo].
+El hardware profile `cpu-workshop` se crea en xref:08-01-deploy-cpu.adoc[Desplegar modelo — CPU], junto con el modelo que lo usa.

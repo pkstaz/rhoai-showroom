@@ -2,7 +2,7 @@
 
 Publica un modelo en MaaS. Elige *una o más* rutas (como el módulo 5):
 
-* xref:08-01-deploy-cpu.adoc[CPU] — `{qwen-model}` con llm-d / vLLM CPU. *Camino por defecto del lab.*
+* xref:08-01-deploy-cpu.adoc[CPU] — modelo LLM con llm-d / vLLM CPU. *Camino por defecto del lab.*
 * xref:08-02-deploy-gpu.adoc[GPU] — vLLM CUDA en GPU NVIDIA real (módulo 5 NVIDIA). Fake GPU *no* sirve para inferencia.
 * xref:08-03-deploy-external.adoc[Modelo externo] — OpenAI-compatible fuera del cluster (TMM u otro). Name, endpoint y API key los da el instructor *en cada sala*.
 
