@@ -1,9 +1,9 @@
 ---
-name: deploy-on-aws-pre-set-env
-description: Deploys the RHOAI MaaS lab onto an AWS OpenShift cluster that is already pre-provisioned (RHOAI 3.5.1, cert-manager, Pipelines, NFD, NVIDIA GPU Operator, admin user). Use when the user says deploy-on-aws-pre-set-env, asks to deploy the workshop on a pre-set AWS cluster, or to continue from an existing DataScienceCluster/default-dsc.
+name: deploy-on-openshift-pre-provisioned
+description: "Despliega el lab RHOAI MaaS sobre un cluster OpenShift ya desplegado (ambiente pre-configurado: RHOAI 3.5.1, cert-manager, Pipelines, NFD, NVIDIA GPU Operator, admin user). Use when the user says desplegar en openshift ya desplegado / ambiente pre configurado / deploy-on-openshift-pre-provisioned, asks to deploy the workshop on a pre-set AWS cluster, or to continue from an existing DataScienceCluster/default-dsc."
 ---
 
-# Deploy on AWS pre-set env
+# Desplegar en OpenShift ya desplegado (ambiente pre-configurado)
 
 Run every `oc apply` / script from the **repo root**. Do not install operators or users already marked OK. Stop after Observability; do not continue to EvalHub/FinOps/Guardrails.
 

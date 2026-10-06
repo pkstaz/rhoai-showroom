@@ -1,4 +1,4 @@
-# Reference — deploy-on-aws-pre-set-env
+# Reference — deploy-on-openshift-pre-provisioned
 
 Read this when executing Authorino uninstall, Kueue recovery, GPU Booking `--no-hooks`, Authorino gRPC TLS, gpt-oss serving, dual MaaS subscriptions, or playground OGX. This skill does **not** install Fake GPU or GPU Config Plugin.
 

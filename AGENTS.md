@@ -20,7 +20,7 @@ Regla del lab: **comando / `oc apply` primero** (manifiestos en `manifests/`), l
 | `manifests/` | Manifiestos K8s/OpenShift + scripts `apply-*.sh` / `fix-*.sh` (ver `manifests/README.md` para el mapa módulo→path) |
 | `www/` | Sitio generado (gitignored) |
 | `.github/workflows/gh-pages.yml` | CI: build Antora con Node 20.13.1 y deploy a GitHub Pages en push a `main` |
-| `.opencode/skills/` | Skills opencode del repo: `enable-observability` (Módulo 11) y `deploy-on-aws-pre-set-env` (deploy AWS con GPU real L4, salta Fake GPU) |
+| `.opencode/skills/` | Skills opencode del repo: `enable-observability` (Módulo 11) y `deploy-on-openshift-pre-provisioned` (desplegar en OpenShift ya desplegado / ambiente pre-configurado, con GPU real L4, salta Fake GPU) |
 
 ## Comandos
 
