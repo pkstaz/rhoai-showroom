@@ -1,0 +1,62 @@
+# Acceso de los usuarios del workshop (jero/rodri/pablo) via MaaS:
+# una subscripcion que cubre los 3 modelos del cluster + policy de acceso.
+# Los usuarios se crean en el SSO (realm sso) y se mapean por preferred_username.
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSAuthPolicy
+metadata:
+  name: workshop-users-access
+  namespace: models-as-a-service
+  annotations:
+    openshift.io/display-name: "Workshop users (jero/rodri/pablo)"
+spec:
+  modelRefs:
+    - name: qwen3-06b
+      namespace: llm
+    - name: qwen3-14b-awq
+      namespace: llm
+    - name: glm-53-flash
+      namespace: llm
+  subjects:
+    groups: []
+    users:
+      - jero
+      - rodri
+      - pablo
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata:
+  name: workshop-users
+  namespace: models-as-a-service
+  annotations:
+    openshift.io/display-name: "Workshop users (jero/rodri/pablo)"
+spec:
+  owner:
+    groups: []
+    users:
+      - jero
+      - rodri
+      - pablo
+  priority: 50
+  modelRefs:
+    - name: qwen3-06b
+      namespace: llm
+      tokenRateLimits:
+        - limit: 2000
+          window: 30s
+        - limit: 20000
+          window: 5m
+    - name: qwen3-14b-awq
+      namespace: llm
+      tokenRateLimits:
+        - limit: 2000
+          window: 30s
+        - limit: 20000
+          window: 5m
+    - name: glm-53-flash
+      namespace: llm
+      tokenRateLimits:
+        - limit: 2000
+          window: 30s
+        - limit: 20000
+          window: 5m

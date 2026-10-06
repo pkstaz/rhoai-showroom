@@ -28,6 +28,8 @@ Run `oc apply` / scripts from the **repo root**.
 | `maas-subscription.yaml` | Auth policy + subscription (Qwen) |
 | `maas-subscription-qwen3-14b-awq.yaml` | Auth policy + subscription (GPU Qwen3-14B-AWQ) |
 | `maas-subscription-gpt-oss-20b.yaml` | Auth policy + subscription (GPU) |
+| `maas-subscription-workshop-users.yaml` | Workshop users subscription: 3 modelos para jero/rodri/pablo (MaaS) |
+| `apply-sso-users.sh` | Usuarios SSO (RHBK realm sso, perfil completo + password) para MaaS |
 | `apply-gpu-booking-hybrid.sh` | GPU Booking with Fake + real NVIDIA (discovery off) |
 | `fix-maas-gpu-utilization.sh` | DCGM → `accelerator_gpu_utilization` on cluster Prometheus + RHOAI MonitoringStack |
 | `fix-maas-usage-user-label.sh` | Usage UI user label |
