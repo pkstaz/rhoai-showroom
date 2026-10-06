@@ -1,0 +1,42 @@
+{
+  "name": "opencode-agents",
+  "version": "0.0.1",
+  "description": "OpenShift Console plugin: gestion de agentes OpenCode (entornos) del workshop RHOAI",
+  "private": true,
+  "type": "module",
+  "license": "Apache-2.0",
+  "scripts": {
+    "clean": "rm -rf dist",
+    "build": "npm run clean && NODE_ENV=production rspack"
+  },
+  "consolePlugin": {
+    "name": "opencode-agents",
+    "version": "0.0.1",
+    "displayName": "OpenCode Agents",
+    "description": "Gestion de agentes OpenCode (entornos) del workshop RHOAI Showroom",
+    "exposedModules": {
+      "AgentsPage": "./components/AgentsPage"
+    },
+    "dependencies": {
+      "@console/pluginAPI": ">=5.0.0-0 || >=4.23.0-0"
+    }
+  },
+  "devDependencies": {
+    "@openshift-console/dynamic-plugin-sdk": "4.23-latest",
+    "@openshift-console/dynamic-plugin-sdk-webpack": "4.23-latest",
+    "@patternfly/react-core": "^6.6.1",
+    "@patternfly/react-icons": "^6.6.1",
+    "@patternfly/react-table": "^6.6.1",
+    "@rspack/cli": "^2.1.10",
+    "@rspack/core": "^2.1.10",
+    "@swc/core": "^1.15.47",
+    "@types/node": "^22.0.0",
+    "@types/react": "^18.3.28",
+    "react": "^18.3.1",
+    "react-compiler-runtime": "^1.0.0",
+    "react-dom": "^18.3.1",
+    "react-router": "~7.18.1",
+    "ts-checker-rspack-plugin": "^1.6.1",
+    "typescript": "^5.9.3"
+  }
+}

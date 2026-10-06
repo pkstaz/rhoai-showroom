@@ -1,0 +1,141 @@
+# Agente OpenCode por usuario (jero/rodri/pablo) en el proyecto opencode-users.
+# Renderizado por manifests/apply-opencode-users.sh: reemplaza __USER__,
+# __IMAGE__ y __CLUSTER_DOMAIN__. La API key de MaaS se inyecta via el secret
+# opencode-maas-key-<user> (cada usuario crea la suya).
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: opencode-config-__USER__
+  namespace: opencode-users
+  labels:
+    app: opencode-agent
+data:
+  opencode.jsonc: |
+    {
+      "$schema": "https://opencode.ai/config.json",
+      "model": "maas/glm-53-flash",
+      "small_model": "maas/glm-53-flash",
+      "provider": {
+        "maas": {
+          "npm": "@ai-sdk/openai-compatible",
+          "name": "MaaS (cluster)",
+          "options": {
+            "baseURL": "https://maas.__CLUSTER_DOMAIN__/v1",
+            "apiKey": "{env:MAAS_API_KEY}"
+          },
+          "models": {
+            "glm-53-flash": { "name": "GLM 4.6 Flash" },
+            "publishers/llm/models/qwen3-06b": { "name": "Qwen3 0.6B" },
+            "publishers/llm/models/qwen3-14b-awq": { "name": "Qwen3 14B AWQ" }
+          }
+        }
+      },
+      "permission": {
+        "edit": "allow",
+        "bash": { "*": "allow" },
+        "webfetch": "allow"
+      }
+    }
+  AGENTS.md: |
+    # Agente OpenCode del workshop
+
+    Eres un agente que corre en el cluster OpenShift (SA system:serviceaccount:opencode-users:opencode-agent).
+
+    - Tienes `oc` disponible y el token del SA: puedes listar y operar recursos del proyecto opencode-users.
+    - Tu LLM es el MaaS del propio cluster (glm-53-flash, qwen3-06b, qwen3-14b-awq).
+    - No expongas secretos ni API keys en tus respuestas.
+    - Si `oc` falla con permisos, informa en lugar de forzar.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: opencode-__USER__
+  namespace: opencode-users
+  labels:
+    app: opencode-agent
+    opendatahub.io/dashboard: "true"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: opencode-agent
+      user: __USER__
+  template:
+    metadata:
+      labels:
+        app: opencode-agent
+        user: __USER__
+        opendatahub.io/dashboard: "true"
+    spec:
+      serviceAccountName: opencode-agent
+      containers:
+        - name: opencode
+          image: __IMAGE__
+          imagePullPolicy: Always
+          command: ["/bin/sh", "-c"]
+          args:
+            - >-
+              mkdir -p $HOME/.config/opencode $HOME/.local/share/opencode &&
+              cp /opt/opencode-config/opencode.jsonc $HOME/.config/opencode/opencode.jsonc &&
+              cp /opt/opencode-config/AGENTS.md $HOME/.config/opencode/AGENTS.md &&
+              exec /opt/app/node_modules/.bin/opencode serve --hostname 0.0.0.0 --port 4096 --cors https://app.opencode.ai
+          ports:
+            - containerPort: 4096
+              name: http
+          env:
+            - name: MAAS_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: opencode-maas-key-__USER__
+                  key: MAAS_API_KEY
+                  optional: true
+          volumeMounts:
+            - name: config
+              mountPath: /opt/opencode-config
+            - name: tmp
+              mountPath: /tmp
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              memory: 1Gi
+      volumes:
+        - name: config
+          configMap:
+            name: opencode-config-__USER__
+        - name: tmp
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: opencode-__USER__
+  namespace: opencode-users
+  labels:
+    app: opencode-agent
+spec:
+  selector:
+    app: opencode-agent
+    user: __USER__
+  ports:
+    - port: 4096
+      targetPort: 4096
+      name: http
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: opencode-__USER__
+  namespace: opencode-users
+  labels:
+    app: opencode-agent
+spec:
+  to:
+    kind: Service
+    name: opencode-__USER__
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect

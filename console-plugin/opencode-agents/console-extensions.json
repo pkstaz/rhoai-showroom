@@ -1,0 +1,28 @@
+[
+  {
+    "type": "console.navigation/section",
+    "properties": {
+      "id": "opencode-section",
+      "name": "OpenCode",
+      "perspective": "admin"
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "opencode-agents-page",
+      "name": "Agentes",
+      "href": "/opencode-agents",
+      "perspective": "admin",
+      "section": "opencode-section"
+    }
+  },
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/opencode-agents",
+      "component": { "$codeRef": "AgentsPage" }
+    }
+  }
+]

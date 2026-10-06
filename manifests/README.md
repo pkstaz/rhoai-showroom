@@ -52,4 +52,10 @@ Run `oc apply` / scripts from the **repo root**.
 | `apply-mcp.sh` | MCP Lifecycle Operator + server |
 | `agents/` | Workshop A2A agent source + deploy (module 21) |
 | `apply-agent.sh` | Build (internal registry or QUAY_IMAGE) + deploy |
+| `agents/opencode/` | Agente OpenCode headless (imagen con oc, single-tenant) |
+| `apply-opencode-agent.sh` | Build + deploy del agente OpenCode (NS env) |
+| `agents/opencode-users-template.yaml` | Plantilla por usuario (renderizada por el script) |
+| `apply-opencode-users.sh` | Agentes OpenCode por usuario: 3 entornos en `opencode-users`, config MaaS + Route + RoleBindings |
+| `apply-opencode-plugin.sh` | Plugin de consola: gestion de agentes OpenCode (nginx TLS + ConsolePlugin + registro) |
+| `console-plugin/opencode-agents/` | Fuente del plugin de consola (`npm run build` → dist/) |
 | `apply-skills.sh` | Console plugin https://github.com/eformat/openshift-skills-plugin |
