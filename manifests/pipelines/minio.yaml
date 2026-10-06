@@ -39,7 +39,7 @@ spec:
     spec:
       containers:
         - name: minio
-          image: quay.io/minio/minio:latest
+          image: docker.io/bitnamilegacy/minio:latest
           command: ["minio", "server", "/data", "--console-address", ":9001"]
           env:
             - name: MINIO_ROOT_USER
@@ -87,7 +87,7 @@ spec:
       restartPolicy: OnFailure
       containers:
         - name: mc
-          image: quay.io/minio/mc:latest
+          image: docker.io/bitnamilegacy/minio-client:latest
           env:
             - name: HOME
               value: /tmp
