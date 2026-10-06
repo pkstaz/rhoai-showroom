@@ -7,7 +7,7 @@ description: Deploys the RHOAI MaaS lab onto an AWS OpenShift cluster that is al
 
 Run every `oc apply` / script from the **repo root**. Do not install operators or users already marked OK. Stop after Observability; do not continue to EvalHub/FinOps/Guardrails.
 
-`oc` in this Cursor sandbox needs `required_permissions: ["all"]`. If a command is blocked, retry with `all`. Never invent cluster state.
+opencode pide permiso por comando (`permission` en `opencode.json` o el prompt del TUI); aprueba o añade una regla `allow`. Never invent cluster state.
 
 Copy this checklist and track progress:
 
