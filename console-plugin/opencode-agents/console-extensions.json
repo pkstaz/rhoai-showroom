@@ -3,8 +3,7 @@
     "type": "console.navigation/section",
     "properties": {
       "id": "opencode-section",
-      "name": "OpenCode",
-      "perspective": "admin"
+      "name": "OpenCode"
     }
   },
   {
@@ -13,7 +12,6 @@
       "id": "opencode-agents-page",
       "name": "Agentes",
       "href": "/opencode-agents",
-      "perspective": "admin",
       "section": "opencode-section"
     }
   },
