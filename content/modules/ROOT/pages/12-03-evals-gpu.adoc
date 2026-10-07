@@ -1,0 +1,114 @@
+= Evals de seguridad sobre el modelo GPU (Context-aware + OWASP)
+
+CAUTION: *WIP* (Work in Progress). Este módulo aún NO se valida en lab; los pasos pueden cambiar.
+
+Dos evaluaciones de seguridad contra Qwen3-14B-AWQ (xref:08-02-deploy-gpu.adoc[8.2]), ambas con provider EvalHub `garak` y métrica `attack_success_rate` (ASR, más bajo = más seguro; umbral de lab `0.3`):
+
+[cols="1,2"]
+|===
+| Benchmark | Qué mide
+
+| `intents` — *Context-aware vulnerability scan*
+| SDG de prompts adversariales (fase 1) + evaluación con juez (fase 2): jailbreaks contextuales, extracción de system prompt, exfiltración… (`spo`/`tap`/`translation`)
+
+| `owasp_llm_top10` — *OWASP LLM top 10 risk scan*
+| Suite estática OWASP LLM Top 10 (12 045 prompts: dan, encoding, leakreplay, promptinject, web_injection…)
+|===
+
+Todo queda registrado en el experimento MLflow `qwen3-14b-evals-gpu` (xref:12-02-mlflow.adoc[12.02]).
+
+== Prerrequisitos
+
+* xref:12-00-evalhub.adoc[EvalHub] instalado (`oc get evalhub evalhub -n evalhub`).
+* Modelo GPU *Ready*: `oc get llminferenceservices.serving.kserve.io -n llm` → `qwen3-14b-awq … True`.
+* Secret `maas-eval-api-key` en `llm` *y* `evalhub` (Fallback MaaS local del 12.00).
+* Experimento MLflow creado (xref:12-02-mlflow.adoc[12.02]) — el script lo comprueba.
+
+== Lanzar
+
+Dry-run primero: imprime los payloads sin crear nada.
+
+[source,bash]
+----
+bash manifests/apply-evals-gpu.sh
+----
+
+Luego, `SUBMIT=1` crea los dos jobs (asíncronos):
+
+[source,bash]
+----
+SUBMIT=1 bash manifests/apply-evals-gpu.sh
+----
+
+O UI: *Develop & train → Evaluations* → proyecto `llm` → *Start evaluation run* → benchmark *Context-aware vulnerability scan* / *OWASP LLM top 10 risk scan* (mismos valores de modelo/endpoint/secret que el 12.00).
+
+NOTA: En *simple mode* EvalHub monta el Secret como token-ref (`api-key:ref`) y *todas* las llamadas al modelo pasan por el sidecar de EvalHub (`localhost:8080`), que inyecta la credencial real. Por eso los roles (`judge`, `sdg`) del payload apuntan a `http://localhost:8080/v1`: apuntar a MaaS directamente con el token-ref da `401`.
+
+== Seguimiento
+
+[source,bash]
+----
+EVALHUB_URL=https://$(oc get route -n evalhub -o jsonpath='{.items[0].spec.host}')
+curl -sk "$EVALHUB_URL/api/v1/evaluations/jobs?limit=5" \
+  -H "Authorization: Bearer $(oc whoami -t)" -H "X-Tenant: llm" \
+  | jq '.jobs[] | {id: .resource.id, benchmark: .resource.benchmark_id, state: .resource.state}'
+
+oc get jobs,pods -n llm | grep -E 'garak|qwen3-14b'   # el job Kubernetes corre en el proyecto del modelo
+oc logs -n llm <pod-garak> -c adapter | grep 'garak\[progress\]' | tail -3
+----
+
+La primera vez el pod descarga la imagen Garak (minutos en *Pending*).
+
+[cols="1,2"]
+|===
+| Señal | Significado
+
+| `state: running_evaluation` + progreso `garak[progress]`
+| Scan en marcha
+
+| `state: completed` / job Kubernetes `Complete`
+| Resultados listos en MLflow
+
+| `adapter` `Error` en el pod
+| `oc logs <pod> -c adapter` (el traceback indica el fallo, p. ej. `401` de auth)
+|===
+
+== Resultados
+
+. Dashboard → *Develop & train* → *Experiments (MLflow)* → proyecto `llm` → `qwen3-14b-evals-gpu`.
+. Un *run* por job (nombre tipo `garak-owasp-…` / `garak-intents-…`) con `attack_success_rate` entre sus metrics.
+. Artefactos del run: `scan.report.html` (informe garak en el navegador), `scan.report.jsonl`, `scan.hitlog.jsonl`.
+. El run *parent* creado por EvalHub puede quedar en estado `RUNNING` aunque el job haya terminado: mira los *runs hijos* con `… | jq '.runs[] | select(.info.run_name != null)'` o el *status* del job en la UI de Evaluations.
+
+Resultado de referencia en lab (OWASP sobre Qwen3-14B-AWQ): *12 045 prompts, ~29 min, ASR ≈ 0.10* (bajo el umbral 0.3). El Context-aware añade la fase SDG: *+30–90 min* según cola de GPU.
+
+[source,bash]
+----
+oc port-forward -n redhat-ods-applications svc/mlflow 18443:8443 &
+TOKEN=$(oc whoami -t); MF=https://localhost:18443/mlflow
+curl -sk "$MF/api/2.0/mlflow/runs/search?experiment_ids=6" \
+  -H "X-MLFLOW-WORKSPACE: llm" -H "Authorization: Bearer $TOKEN" \
+  | jq '.runs[] | {name: .info.run_name, status: .info.status,
+       asr: [.data.metrics.attack_success_rate // empty]}'
+----
+
+== GAPs
+
+[cols="2,2"]
+|===
+| Lab hoy | Prd
+
+| ASR con umbral `0.3` a mano
+| Gates de promotion con umbral por benchmark en CI
+
+| Juez y SDG = el mismo modelo (fan-out)
+| Juez más capaz y separado; atacante con GPU propia
+
+| Dos scans bajo demanda
+| Nightly + comparativa entre versiones de modelo
+
+| Informe `scan.report.html` suelto
+| Dashboard de seguridad agregado por release
+|===
+
+Tiempo orientativo: OWASP *~30–45 min*; Context-aware *+30–90 min* (SDG sobre GPU en cola).

@@ -1,0 +1,51 @@
+# Subscripcion admin: todos los modelos del cluster, 3M tokens/min, solo admin.
+# Priority 150 para que gane a workshop-users (10) para el usuario admin.
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSAuthPolicy
+metadata:
+  name: admin-all-models-access
+  namespace: models-as-a-service
+  annotations:
+    openshift.io/display-name: "Admin (todos los modelos, 3M tok/min)"
+spec:
+  modelRefs:
+    - name: qwen3-06b
+      namespace: llm
+    - name: qwen3-14b-awq
+      namespace: llm
+    - name: glm-53-flash
+      namespace: llm
+  subjects:
+    groups: []
+    users:
+      - admin
+---
+apiVersion: maas.opendatahub.io/v1alpha1
+kind: MaaSSubscription
+metadata:
+  name: admin-all-models
+  namespace: models-as-a-service
+  annotations:
+    openshift.io/display-name: "Admin (todos los modelos, 3M tok/min)"
+spec:
+  owner:
+    groups: []
+    users:
+      - admin
+  priority: 150
+  modelRefs:
+    - name: qwen3-06b
+      namespace: llm
+      tokenRateLimits:
+        - limit: 3000000
+          window: 1m
+    - name: qwen3-14b-awq
+      namespace: llm
+      tokenRateLimits:
+        - limit: 3000000
+          window: 1m
+    - name: glm-53-flash
+      namespace: llm
+      tokenRateLimits:
+        - limit: 3000000
+          window: 1m

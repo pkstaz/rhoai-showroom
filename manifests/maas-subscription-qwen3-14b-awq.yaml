@@ -31,7 +31,7 @@ spec:
     - name: qwen3-14b-awq
       namespace: llm
       tokenRateLimits:
-        - limit: 500
+        - limit: 50000
           window: 30s
-        - limit: 5000
+        - limit: 500000
           window: 5m

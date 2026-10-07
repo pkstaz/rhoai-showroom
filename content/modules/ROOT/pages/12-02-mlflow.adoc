@@ -1,0 +1,85 @@
+= MLflow: experimento de auditoría y trazas LLM
+
+CAUTION: *WIP* (Work in Progress). Este módulo aún NO se valida en lab; los pasos pueden cambiar.
+
+Antes de lanzar los xref:12-03-evals-gpu.adoc[evals de seguridad], este paso deja *rastreable* todo en MLflow: el experimento, el *dataset* de preguntas de auditoría, quién/qué/cuándo, y una *traza LLM por pregunta* (prompt, respuesta y tokens) generada con autolog.
+
+== Script (recomendado)
+
+[source,bash]
+----
+bash manifests/apply-mlflow-audit.sh
+----
+
+No toca el modelo hasta la fase de autolog (8 preguntas cortas contra Qwen3-14B-AWQ). Parámetros opcionales:
+
+[cols="1,3"]
+|===
+| Variable | Por defecto
+
+| `EXPERIMENT_NAME` | `qwen3-14b-evals-gpu`
+| `WORKSPACE` | `llm` (el Data Science project del modelo)
+| `DATASET_NAME` | `qwen3-14b-audit-evals`
+| `TRACES=0` | solo metadata (salta el autolog)
+|===
+
+== Qué crea
+
+. *Experimento* `qwen3-14b-evals-gpu` (get-or-create) en el workspace MLflow `llm`.
+. *Run* `qwen3-14b-audit-pre-evals` con estado `FINISHED`.
+. *Dataset* `qwen3-14b-audit-evals` (JSONL, 8 preguntas: prompt_injection, extracción de system prompt, jailbreak, código malicioso, exfiltración de secretos/URL + 2 controles benignos):
+  ** subido como artefacto (`datasets/qwen3-14b-audit-evals.jsonl`) y
+  ** registrado como *input* del run (pestaña *Inputs*).
+. *Params* (`modelo`, `endpoint`, `benchmark_1/2`, `umbral_asr`, `usuario`, `fecha_utc`), *tags* (`context=eval-hub`, `audit=pre-evals`) y *metrics* (`preguntas_dataset`, `trazas_llm_ok`, `trazas_llm_errores`).
+. *8 trazas LLM* vía `mlflow.openai.autolog()` — una por pregunta, vinculadas al run.
+
+El autolog se ejecuta en un venv propio (`~/.cache/rhoai-showroom/mlflow-audit-venv`, Python ≥3.10 + `mlflow>=3.10`); la primera vez lo crea (descarga ~100 MB, requiere internet).
+
+== Verificación (UI)
+
+. Dashboard → *Develop & train* → *Experiments (MLflow)* → proyecto **`llm`**.
+. `qwen3-14b-evals-gpu` → run `qwen3-14b-audit-pre-evals`:
+  ** *Inputs*: el dataset `qwen3-14b-audit-evals`.
+  ** *Artifacts*: `datasets/qwen3-14b-audit-evals.jsonl`.
+  ** *Traces*: 8 trazas con prompt/respuesta/tokens por pregunta (expandir cada una).
+  ** *Metrics*: `trazas_llm_ok = 8`.
+
+== Verificación (REST, opcional)
+
+[source,bash]
+----
+oc port-forward -n redhat-ods-applications svc/mlflow 18443:8443 &
+TOKEN=$(oc whoami -t); MF=https://localhost:18443/mlflow
+H=(-H "X-MLFLOW-WORKSPACE: llm" -H "Authorization: Bearer $TOKEN")
+
+curl -sk "$MF/api/2.0/mlflow/experiments/search" "${H[@]}" \
+  -H 'Content-Type: application/json' -d '{"max_results":100}' | jq '.experiments[].name'
+# …→ qwen3-14b-evals-gpu (id 6)
+
+curl -sk "$MF/api/2.0/mlflow/traces?experiment_ids=6" "${H[@]}" | jq '.traces | length'
+# …→ 8
+----
+
+IMPORTANTE: MLflow en RHOAI es *multi-workspace*: sin la cabecera `X-MLFLOW-WORKSPACE: llm` (o sin el sufijo `/mlflow` en la URL) las llamadas fallan con `Workspace context is required`.
+
+== Siguiente
+
+xref:12-03-evals-gpu.adoc[Evals de seguridad sobre el modelo GPU]: `Context-aware vulnerability scan` + `OWASP LLM top 10 risk scan`, todo registrado en este mismo experimento.
+
+== GAPs
+
+[cols="2,2"]
+|===
+| Lab hoy | Prd
+
+| 8 preguntas de auditoría fijas (JSONL)
+| Dataset versionado con métricas de cobertura
+
+| Autolog con `mlflow.openai` + venv local
+| Tracing del gateway (latencia p95, tokens) en CI
+
+| Run de auditoría manual
+| Auditoría programada + alerta de regresión
+|===
+
+Tiempo orientativo: *3–5 min* (+ ~1 min la primera vez por el venv) y *~30 s* de llamadas al modelo.
