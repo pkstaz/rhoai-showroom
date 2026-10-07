@@ -42,3 +42,4 @@
 * xref:21-00-agentops.adoc[21. AgentOps (WIP)]
 * xref:22-00-skills.adoc[22. Skills Plugin (WIP)]
 * xref:23-00-openshell.adoc[23. OpenShell (WIP)]
+** xref:23-01-openshell-usuarios.adoc[Multi-usuario: tu gateway en tu namespace (WIP)]

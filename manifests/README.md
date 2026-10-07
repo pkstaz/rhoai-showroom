@@ -64,3 +64,6 @@ Run `oc apply` / scripts from the **repo root**.
 | `apply-skills.sh` | Console plugin https://github.com/eformat/openshift-skills-plugin |
 | `openshell/` | Provider profile de MaaS para OpenShell (module 23) |
 | `apply-openshell.sh` | NVIDIA OpenShell: Agent Sandbox CRDs + gateway via Helm (module 23) |
+| `openshell-users/` | OpenShell multi-usuario (module 23.1): SCC + ClusterRole del gateway, RBAC por usuario |
+| `apply-openshell-users.sh` | Provisión por usuario: ns `openshell-<user>` + rol edit + SCC use + node-reader + CRUD Sandboxes; `PREDEPLOY=1` despliega por ellos |
+| `openshell-users/apply-my-openshell.sh` | Self-service: el usuario despliega SU OpenShell en SU namespace (bundle + Route pública passthrough) o lo borra con `MODE=delete` |

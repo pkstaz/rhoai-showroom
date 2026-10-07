@@ -1,0 +1,89 @@
+# RBAC por usuario de OpenShell multi-usuario (modulo 23.1). Renderizado por
+# manifests/apply-openshell-users.sh (placeholders __USER__/__NS__); no aplicar
+# raw. El ClusterRole node-reader replica el que renderiza el chart por release
+# (openshell-node-reader-<ns>): lo crea el admin porque es cluster-scoped y el
+# usuario no puede. El RoleBinding al ClusterRole openshell-gateway-scc-use da
+# el SCC al SA del gateway y al usuario. El Role openshell-user-sandboxes da al
+# usuario CRUD sobre los Sandboxes (CRD agents.x-k8s.io) de SU namespace.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: openshell-node-reader-__NS__
+  labels:
+    app.kubernetes.io/name: openshell
+rules:
+  - apiGroups: [node.k8s.io]
+    resources: [runtimeclasses]
+    verbs: [get]
+  - apiGroups: [scheduling.k8s.io]
+    resources: [priorityclasses]
+    verbs: [get]
+  - apiGroups: [authentication.k8s.io]
+    resources: [tokenreviews]
+    verbs: [create]
+  - apiGroups: [""]
+    resources: [nodes]
+    verbs: [get, list, watch]
+  - apiGroups: [""]
+    resources: [namespaces]
+    verbs: [get]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: openshell-node-reader-__NS__
+  labels:
+    app.kubernetes.io/name: openshell
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: openshell-node-reader-__NS__
+subjects:
+  - kind: ServiceAccount
+    name: openshell
+    namespace: __NS__
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: openshell-gateway-scc
+  namespace: __NS__
+  labels:
+    app.kubernetes.io/name: openshell
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: openshell-gateway-scc-use
+subjects:
+  - kind: ServiceAccount
+    name: openshell
+    namespace: __NS__
+  - kind: User
+    name: __USER__
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: openshell-user-sandboxes
+  namespace: __NS__
+  labels:
+    app.kubernetes.io/name: openshell
+rules:
+  - apiGroups: [agents.x-k8s.io]
+    resources: [sandboxes, sandboxes/status]
+    verbs: [create, delete, get, list, patch, update, watch]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: openshell-user-sandboxes
+  namespace: __NS__
+  labels:
+    app.kubernetes.io/name: openshell
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: openshell-user-sandboxes
+subjects:
+  - kind: User
+    name: __USER__

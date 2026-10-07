@@ -158,3 +158,7 @@ Audit trail: cada allow/deny queda registrado en el supervisor; consulta con `oc
 * El gateway del lab corre con `allowUnauthenticatedUsers` (port-forward local); en Prd: OIDC o access proxy.
 * OpenCode completo contra MaaS en sandbox requiere imagen propia + pull secret (WIP).
 * **Rewrite a `maas.<domain>` no funciona en lab**: la política (NET + L7) permite la petición y la reescritura de placeholders funciona para otros hosts, pero el header `Authorization` no llega a MaaS (401 sin auth, incluso con la key real sin placeholder). Diagnóstico: la key funciona desde pods planos (HTTP/1.1 y HTTP/2, cualquier IP del ELB), las IPs del DNS (2× `100.x` + 1 AWS) responden 200, y el mismo profile con otro host reescribe bien. Fallo host-específico; reportar upstream con este diagnóstico.
+
+== Siguiente
+
+xref:23-01-openshell-usuarios.adoc[23.1 — OpenShell multi-usuario]: cada usuario levanta *su* gateway en *su* namespace con Route pública y permisos namespace-scoped (self-service).

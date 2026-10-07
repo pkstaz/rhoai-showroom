@@ -1,0 +1,52 @@
+# SCC + RBAC del gateway OpenShell multi-usuario (modulo 23.1). Cluster-scoped:
+# se aplica UNA VEZ por cluster (manifests/apply-openshell-users.sh, como
+# cluster-admin). El SCC es el minimo para el gateway del chart oficial:
+# UID/GID 1000 fijo y los volumenes del StatefulSet (ConfigMap, Secrets,
+# projected, PVC 1Gi). Sin caps, sin host, sin root. El ClusterRole da `use`
+# del SCC de forma namespace-scoped (RoleBinding por usuario en su ns), por lo
+# que un usuario NO cluster-admin puede desplegar SU gateway sin anyuid global.
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  name: openshell-gateway
+  labels:
+    app.kubernetes.io/name: openshell
+allowHostDirVolumePlugin: false
+allowHostIPC: false
+allowHostNetwork: false
+allowHostPID: false
+allowHostPorts: false
+allowPrivilegeEscalation: false
+allowPrivilegedContainer: false
+allowedCapabilities: []
+defaultAddCapabilities: []
+fsGroup:
+  type: MustRunAs
+  ranges:
+    - min: 1000
+      max: 1000
+readOnlyRootFilesystem: false
+runAsUser:
+  type: MustRunAs
+  uid: 1000
+seLinuxContext:
+  type: MustRunAs
+supplementalGroups:
+  type: RunAsAny
+volumes:
+  - configMap
+  - secret
+  - projected
+  - persistentVolumeClaim
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: openshell-gateway-scc-use
+  labels:
+    app.kubernetes.io/name: openshell
+rules:
+  - apiGroups: [security.openshift.io]
+    resources: [securitycontextconstraints]
+    resourceNames: [openshell-gateway]
+    verbs: [use]

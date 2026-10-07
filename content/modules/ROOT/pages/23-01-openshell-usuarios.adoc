@@ -1,0 +1,73 @@
+= OpenShell multi-usuario — tu gateway en tu namespace
+
+CAUTION: *WIP* (Work in Progress). Este módulo aún NO se valida en lab con usuario no-admin; los pasos pueden cambiar.
+
+El xref:23-00-openshell.adoc[módulo 23] despliega *un* gateway central en `openshell`. Este módulo es el flujo *self-service*: cada usuario levanta *su propio* OpenShell en *su* namespace, con *Route pública* para conectar desde fuera y permisos acotados a su namespace.
+
+== Cómo funciona
+
+|===
+|Pieza |Quién |Qué
+
+|SCC `openshell-gateway` + `ClusterRole` scc-use
+|cluster-admin (una vez)
+|Mínimo para el gateway del chart: UID/GID 1000 y los volúmenes del StatefulSet. Con `RoleBinding` namespace-scoped, el usuario despliega sin `anyuid` global.
+
+|Namespace `openshell-<user>` + RBAC
+|cluster-admin (por usuario)
+|Rol `edit` + `RoleBinding` SCC-use + `ClusterRoleBinding` node-reader (replica el del chart) + CRUD `Sandboxes` del CRD `agents.x-k8s.io`.
+
+|Bundle gateway + Route pública
+|usuario (self-service)
+|`helm template` del chart oficial filtrado (sin ClusterRoles que el usuario no puede crear) + `Route` passthrough TLS con el host en las SANs del cert.
+|===
+
+El link público permite `openshell gateway add https://<host> --name <ns>` desde el laptop: la Route es *passthrough*, el gateway sirve su propio TLS con *mTLS* y el bundle lo saca el usuario del secret `openshell-client-tls` de su namespace.
+
+== Provisionar (cluster-admin)
+
+```sh
+bash manifests/apply-openshell-users.sh               # USERS="jero rodri pablo"
+USERS="rodri" bash manifests/apply-openshell-users.sh # solo rodri
+PREDEPLOY=1 bash manifests/apply-openshell-users.sh   # despliega por ellos
+```
+
+Crea el SCC + ClusterRole una vez y por usuario: namespace `openshell-<user>`, rol `edit`, RoleBindings (SCC use, Sandboxes CRUD) y el node-reader cluster-scoped.
+
+== Desplegar mi OpenShell (usuario)
+
+```sh
+NS=openshell-jero bash manifests/openshell-users/apply-my-openshell.sh
+```
+
+* `helm template` del chart + filtro de recursos cluster-scoped + `oc apply -f - -n $NS` (los docs sin `metadata.namespace` irían al namespace por defecto del contexto).
+* Borra `job/openshell-certgen` y los secrets `openshell-server-tls`/`openshell-client-tls`/`openshell-jwt-keys` antes: el certgen no regenera con estado parcial ni si cambian las SANs.
+* Espera el certgen, reinicia el gateway (carga el cert al arrancar) y imprime la URL pública: `https://openshell-<ns>.<apps-domain>`.
+* `MODE=delete NS=openshell-jero` borra tu OpenShell.
+
+== Conectar y usar (usuario)
+
+```sh
+mkdir -p ~/.config/openshell/gateways/openshell-jero/mtls
+for f in ca.crt tls.crt tls.key; do
+  oc -n openshell-jero get secret openshell-client-tls -o "jsonpath={.data.$f}" | base64 -d > ~/.config/openshell/gateways/openshell-jero/mtls/$f
+done
+openshell gateway add https://openshell-openshell-jero.<apps-domain> --name openshell-jero
+openshell status
+```
+
+El provider MaaS (`manifests/openshell/maas-provider-profile.yaml`) se importa con el CLI como en xref:23-00-openshell.adoc[el módulo 23]; tus sandboxes tienen acceso *read-write* a `maas.<domain>` con tu API key inyectada solo en peticiones autorizadas.
+
+== Verificar
+
+. Plugin *OpenCode* → en la consola (WIP: xref:00-00-intro.adoc[plugin `openshell-manager`], MYWO-32) o por CLI:
+. `oc -n openshell-jero get pods` → gateway `1/1 Running`
+. `oc -n openshell-jero get route openshell` → `Admitted`, host público
+. `oc -n openshell-jero auth can-i create sandboxes.agents.x-k8s.io` → `yes`; `create clusterroles` → `no` (el provisioning es del admin)
+. Smoke mTLS: `curl --cacert ... --cert ... --key ... https://<host>/` → TLS 1.3 + mTLS aceptado (gRPC, HTTP/2)
+
+== GAP
+
+* El plugin de consola `openshell-manager` (estado, sandboxes, logs, botón crear/borrar) está pendiente — hoy el self-service es CLI.
+* `allowUnauthenticatedUsers=true` es de lab; en Prd: OIDC o access proxy en la Route.
+* El cluster-scoped `node-reader` por namespace es del chart; a futuro, modo `operator` (un gateway multi-namespace) reduce RBAC.
