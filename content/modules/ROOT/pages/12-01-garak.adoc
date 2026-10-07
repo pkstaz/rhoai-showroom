@@ -107,4 +107,8 @@ Tras el módulo 14, cambia `ENDPOINT` a la Route `workshop` (`/v1`) y vuelve a `
 | Nightly + gate en registry
 |===
 
+== Siguiente
+
+xref:12-02-mlflow.adoc[12.02 — MLflow]: experimento de auditoría con dataset y trazas LLM. Después, xref:12-03-evals-gpu.adoc[12.03 — Evals GPU]: Context-aware + OWASP sobre Qwen3-14B-AWQ.
+
 Tiempo orientativo: *15–25 min* (`quick`) + waits de imagen. ART: *+30–90 min* si el DSPA está listo.
