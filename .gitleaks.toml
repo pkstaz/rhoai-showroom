@@ -1,9 +1,10 @@
 title = "rhoai-showroom gitleaks config"
 
 [allowlist]
-description = "Workshop-only Postgres and MinIO credentials in manifests"
+description = "Workshop-only Postgres and MinIO credentials in manifests + openshell-manager plugin KEK (eliminado; key muerta, gateways borrados del cluster)"
 paths = [
   '''manifests/maas/maas-postgres\.yaml''',
   '''manifests/observability/usage-logging/minio-secret\.yaml''',
   '''manifests/evalhub/postgres\.yaml''',
+  '''console-plugin/openshell-manager/''',
 ]
