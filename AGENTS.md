@@ -4,7 +4,7 @@
 
 Workshop **Showroom de Red Hat OpenShift AI 3.5.1** (`rhoai-showroom`): guía hands-on publicada como sitio estático (Antora → GitHub Pages, `https://pkstaz.github.io/rhoai-showroom`) que instala RHOAI en un cluster vacío y deja un modelo LLM publicado en **Models as a Service (MaaS)** servido con **llm-d en CPU**.
 
-El recorrido completo: Web Terminal → operadores/monitoring → RHOAI + dashboard → MaaS (Gateway API/Kuadrant/Postgres) → GPU (NVIDIA/Fake + GPU Booking) → Model Catalog → despliegue de modelos (CPU + hardware profile / GPU / externo TMM) → subscriptions MaaS → verificación → observabilidad → EvalHub/Garak → FinOps → Guardrails → Model Registry → ruteo multi-modelo → AutoML/AutoRAG → Prompt Registry → MCP → AgentOps → Skills plugin.
+El recorrido completo: Web Terminal → operadores/monitoring → RHOAI + dashboard → MaaS (Gateway API/Kuadrant/Postgres) → GPU (NVIDIA/Fake + GPU Booking) → Model Catalog → despliegue de modelos (CPU + hardware profile / GPU / externo TMM) → subscriptions MaaS → verificación → observabilidad → EvalHub/Garak → FinOps → Guardrails → Model Registry → ruteo multi-modelo → AutoML/AutoRAG → Prompt Registry → MCP → AgentOps → Skills plugin → OpenShell (runtime seguro para agentes).
 
 Regla del lab: **comando / `oc apply` primero** (manifiestos en `manifests/`), la UI es verificación al final de cada módulo. Público: facilitadores y asistentes; el módulo 0.1 mapea Lab→Prd (teoría, qué evaluar) y el 0.2 es la herramienta interactiva RACI y GAPs por cliente (estado por área, validación de gobierno, export Markdown/JSON/print).
 
@@ -20,7 +20,7 @@ Regla del lab: **comando / `oc apply` primero** (manifiestos en `manifests/`), l
 | `manifests/` | Manifiestos K8s/OpenShift + scripts `apply-*.sh` / `fix-*.sh` (ver `manifests/README.md` para el mapa módulo→path) |
 | `www/` | Sitio generado (gitignored) |
 | `.github/workflows/gh-pages.yml` | CI: build Antora con Node 20.13.1 y deploy a GitHub Pages en push a `main` |
-| `.opencode/skills/` | Skills opencode del repo: `enable-observability` (Módulo 11) y `deploy-on-openshift-pre-provisioned` (desplegar en OpenShift ya desplegado / ambiente pre-configurado, con GPU real L4, salta Fake GPU) |
+| `.opencode/skills/` | Skills opencode del repo: `enable-observability` (Módulo 11), `audit-mlflow-evals` (Módulo 12.2 — experimento MLflow + dataset + trazas), `run-gpu-evals` (Módulo 12.3 — Context-aware + OWASP sobre Qwen3-14B-AWQ) y `deploy-on-openshift-pre-provisioned` (desplegar en OpenShift ya desplegado / ambiente pre-configurado, con GPU real L4, salta Fake GPU) |
 
 ## Comandos
 
@@ -43,13 +43,14 @@ Los scripts de `manifests/` se ejecutan desde la **raíz del repo** contra un cl
 
 - **Validado en lab (módulos 0–8.1, 9–11 aprox.)**: plataforma RHOAI 3.5.1, monitoring, MaaS end-to-end (installers `apply-maas.sh`, `apply-maas-observability.sh` con auto-fix Authorino/gRPC TLS), Qwen3-0.6B en CPU con llm-d, subscriptions, observabilidad (Tempo/OTEL/COO/Loki), EvalHub + MLflow + Garak `quick`, Fake GPU + GPU Booking, DCGM→`accelerator_gpu_utilization`.
 - **WIP / no validado en lab** (marcado con `(WIP)` en `nav.adoc` y CAUTION en el intro): módulo **8.2 GPU** (Qwen3-14B-AWQ en L4 con tool parser hermes — commit más reciente), **8.3 modelo externo TMM** y módulos **12–22** (EvalHub avanzado, FinOps, Guardrails, Registry, ruteo, AutoML, AutoRAG, Prompt Registry, MCP, AgentOps, Skills).
+- **Módulo 23 OpenShell desplegado y parcialmente validado en lab** (Personal Cluster Summit, 6 oct 2026): Agent Sandbox CRDs + gateway 0.1.2 vía Helm (`apply-openshell.sh`, con SCC `anyuid` para el SA), CLI 0.1.2 + mTLS Connected, provider `maas` con API key (maas-api, 72h), sandboxes con políticas NET+L7 ALLOWED, rewrite de placeholders probado (echo httpbin). Pendiente: smoke sandbox→`maas.<domain>` da 401 sin auth — el proxy no entrega `Authorization` a ese host (patrón issue #2161 de OpenShell, host-específico); GAP documentado en la página. Mantener `(WIP)`.
 - El agente OpenCode del cluster (`manifests/agents/opencode*`, `apply-opencode-agent.sh`) ya está trackeado; falta decidir si entra como módulo propio de la guía.
 - **Agentes OpenCode por usuario desplegados** (proyecto `opencode-users`): 3 entornos (jero/rodri/pablo) con `apply-opencode-users.sh` (config MaaS del cluster + Route + RoleBindings edit); la API key la inyecta cada usuario via secret `opencode-maas-key-<user>`. Plugin de consola `opencode-agents` (menú OpenCode → Agentes) desplegado con `apply-opencode-plugin.sh` para gestionar los entornos; fuente en `console-plugin/opencode-agents/` (rebuild: `npm install && npm run build`).
 - Los ficheros `kubeconf-*` de la raíz son kubeconfigs **locales/sensibles** y ya están en `.gitignore` — nunca commitearlos.
 
 ## Qué falta
 
-1. **Validar en lab los módulos WIP**: 8.2 (GPU L4 + hermes), 8.3 (TMM externo) y 12–22; quitar las etiquetas `(WIP)` del nav y el CAUTION del intro a medida que se validen.
+1. **Validar en lab los módulos WIP**: 8.2 (GPU L4 + hermes), 8.3 (TMM externo) y 12–23; quitar las etiquetas `(WIP)` del nav y el CAUTION del intro a medida que se validen.
 2. **Terminar el agente OpenCode** (ya trackeado en git; decidir si entra como módulo propio).
 3. **GAPs documentados en el módulo 0.1** (salida Lab→Prd): suite de evaluación automatizada con gates de promotion, ART Chatterbox completo + umbral ASR en CI, firma Cosign / promotion firmada del Registry, Guardrails Colang + MCP Gateway, dashboards FinOps de tokens/coste por equipo, trazas LLM (latencia p95, tokens in/out), GPU productiva (MIG + Kueue), GitOps multi-entorno (dev→staging→prod).
 4. **Higiene del repo**: mover `kubeconf-*` fuera del repo o a `.gitignore`; revisar el allowlist de gitleaks (apunta a `manifests/maas-postgres.yaml`, que hoy vive en `manifests/maas/`).

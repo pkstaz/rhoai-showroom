@@ -2,7 +2,7 @@
 
 Este workshop instala *OpenShift AI {rhoai-version}* en un cluster vacío y deja un modelo LLM publicado en *Models as a Service* (MaaS), servido con *llm-d* en CPU. Después del vertical slice (módulos 1–11) habilita FinOps, guardrails, registry, AutoML/AutoRAG, Prompt Registry, MCP, AgentOps y el plugin de Skills.
 
-CAUTION: Los módulos *8.2 GPU*, *8.3 modelo externo* y *12–22* están en *WIP* (Work in Progress): aún no se validan en lab y pueden cambiar.
+CAUTION: Los módulos *8.2 GPU*, *8.3 modelo externo* y *12–23* están en *WIP* (Work in Progress): aún no se validan en lab y pueden cambiar.
 
 El fake GPU no ejecuta CUDA. Sirve para que el cluster anuncie `nvidia.com/gpu` (perfiles, GPU Booking). La inferencia corre en CPU. Guardrails, AutoRAG y AgentOps tienen *ruta CPU* y *ruta GPU* cuando el cluster las tiene.
 
@@ -10,7 +10,7 @@ El fake GPU no ejecuta CUDA. Sirve para que el cluster anuncie `nvidia.com/gpu` 
 
 * Módulos 1–10 (plataforma + MaaS): *~2 h* rápido / *~4 h* explicativo
 * Módulos 0.1 + 11 (mapa Lab→Prd, observabilidad): *+60–90 min*
-* Módulos 12–22 *WIP* (EvalHub, gobierno, Gen AI Studio, MCP, agentes, Skills): *+2–3 h* según CPU vs GPU
+* Módulos 12–23 *WIP* (EvalHub, gobierno, Gen AI Studio, MCP, agentes, Skills, OpenShell): *+2–3 h* según CPU vs GPU
 
 Los waits largos son el Operator de OpenShift AI, la carga del modelo y (si hay GPU) AutoRAG / un vLLM CUDA detrás de NeMo.
 
@@ -33,6 +33,7 @@ Los waits largos son el Operator de OpenShift AI, la carga del modelo y (si hay 
 . Prompt Registry (MLflow) y MCP Catalog (OpenShift MCP)
 . AgentOps: catálogo + *Save as new agent* en Playground (A2A `workshop-faq` opcional)
 . Console plugin de Skills
+. OpenShell: gateway + sandbox con agente (xref:23-00-openshell.adoc[módulo 23], opcional)
 
 *Gen AI Studio → AI asset endpoints* (proyecto `llm`) debe listar: *Models*, *MCPs*, *Vector stores* y *Agents*.
 
@@ -59,4 +60,4 @@ Lee xref:00-01-lab-a-prd.adoc[Lab → Prd] antes del hands-on si facilitas el wo
 
 Sigue el menú de la izquierda, de arriba hacia abajo. En los prerrequisitos de *Instalar OpenShift AI* deja los operadores base (Pipelines, Kueue) y el monitoreo de user workloads *antes* del Operator de OpenShift AI. cert-manager, Connectivity Link y Leader Worker Set se instalan en los prerrequisitos de *Habilitar MaaS*; el `GatewayClass` y la instancia Kuadrant van *después* de OpenShift AI. No enciendas `modelsAsAService` hasta tener gateway y base de datos.
 
-Después de xref:10-00-verify.adoc[probar inferencia], continúa con xref:11-00-observabilidad.adoc[observabilidad MaaS], xref:12-00-evalhub.adoc[EvalHub], xref:13-00-finops.adoc[FinOps], xref:14-00-guardrails.adoc[Guardrails] y el resto del menú (registry, ruteo, AutoML, AutoRAG, prompts, MCP, AgentOps, Skills).
+Después de xref:10-00-verify.adoc[probar inferencia], continúa con xref:11-00-observabilidad.adoc[observabilidad MaaS], xref:12-00-evalhub.adoc[EvalHub], xref:13-00-finops.adoc[FinOps], xref:14-00-guardrails.adoc[Guardrails] y el resto del menú (registry, ruteo, AutoML, AutoRAG, prompts, MCP, AgentOps, Skills, OpenShell).

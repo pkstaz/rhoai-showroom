@@ -39,6 +39,8 @@ Run `oc apply` / scripts from the **repo root**.
 | `evalhub/` | EvalHub + MLflow + Garak/ART providers (modules 12–12.1) |
 | `apply-evalhub.sh` | TrustyAI + MLflow + EvalHub |
 | `apply-garak.sh` | Enable Garak + `garak-kfp`; `SUBMIT=1` smoke `quick`; `MODE=art` Chatterbox |
+| `apply-mlflow-audit.sh` | Experimento MLflow `qwen3-14b-evals-gpu` + dataset de auditoría + 8 trazas LLM (autolog) (module 12.2) |
+| `apply-evals-gpu.sh` | `SUBMIT=1` Context-aware (`intents`) + OWASP LLM Top 10 sobre Qwen3-14B-AWQ (module 12.3) |
 | `finops/` | Subscriptions free/team (module 13) |
 | `guardrails/` | `NemoGuardrails` CPU (+ MaaS template) (module 14) |
 | `apply-guardrails.sh` | TrustyAI + NemoGuardrails (`MODE=maas` opcional) |
@@ -56,6 +58,9 @@ Run `oc apply` / scripts from the **repo root**.
 | `apply-opencode-agent.sh` | Build + deploy del agente OpenCode (NS env) |
 | `agents/opencode-users-template.yaml` | Plantilla por usuario (renderizada por el script) |
 | `apply-opencode-users.sh` | Agentes OpenCode por usuario: 3 entornos en `opencode-users`, config MaaS + Route + RoleBindings |
+| `apply-opencode-tracing.sh` | MLflow prompt tracing en los agentes: experimento `agent-sessions` (workspace `llm`) + RBAC + plugin `@mlflow/opencode` (autolog de sesiones MaaS) |
 | `apply-opencode-plugin.sh` | Plugin de consola: gestion de agentes OpenCode (nginx TLS + ConsolePlugin + registro) |
 | `console-plugin/opencode-agents/` | Fuente del plugin de consola (`npm run build` → dist/) |
 | `apply-skills.sh` | Console plugin https://github.com/eformat/openshift-skills-plugin |
+| `openshell/` | Provider profile de MaaS para OpenShell (module 23) |
+| `apply-openshell.sh` | NVIDIA OpenShell: Agent Sandbox CRDs + gateway via Helm (module 23) |

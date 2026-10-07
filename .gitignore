@@ -16,3 +16,4 @@ yarn.lock
 kubeconf*
 kubeconfig*
 .multica/
+__pycache__/

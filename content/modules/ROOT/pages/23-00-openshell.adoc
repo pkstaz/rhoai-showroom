@@ -1,0 +1,160 @@
+= OpenShell — runtime seguro para agentes
+
+CAUTION: *WIP* (Work in Progress). Este módulo aún NO se valida en lab; los pasos pueden cambiar.
+
+*NVIDIA OpenShell* (Apache 2.0) es un runtime seguro para flotas de agentes AI: cada agente corre en un *sandbox* aislado a nivel de kernel y las *políticas declarativas* controlan filesystem, syscalls y red. El agente nunca ve credenciales reales: OpenShell las inyecta solo en las peticiones que van a endpoints aprobados, y cada cambio de política pasa por verificación formal (*advisor* + *prover*) con audit trail de cada allow/deny.
+
+En este lab despliegas el gateway de OpenShell en el cluster, ejecutas *OpenCode* (el agente de los módulos anteriores) dentro de un sandbox y le das acceso al *MaaS del propio cluster* sin exponer la API key al agente.
+
+== Cómo funciona
+
+[cols="1,2"]
+|===
+|Componente |Qué es
+
+|*Gateway*
+|Control plane (Helm, proyecto `openshell`). Gestiona sandboxes, políticas y providers.
+
+|*Supervisor*
+|Pod de control que abre la frontera TLS con el workload y evalúa cada conexión saliente.
+
+|*Sandbox*
+|Pod de trabajo con el agente (cualquier imagen). Lo provisiona *Agent Sandbox* (https://agent-sandbox.sigs.k8s.io[proyecto SIG de Kubernetes], CRD `Sandbox`).
+
+|*Policies*
+|YAML de filesystem/red/procesos. El *advisor* agrupa denegaciones recientes y el *prover* verifica cada regla nueva antes de aprobarla.
+
+|*Providers*
+|Credenciales (API keys) que solo resuelven en los endpoints del profile. El agente ve placeholders, nunca valores.
+|===
+
+IMPORTANT: OpenShell exige que el CNI enforcee `NetworkPolicy` de ingress y egress. OpenShift cumple: OVN-Kubernetes lo enforcea por defecto.
+
+== Desplegar el gateway
+
+[source,bash]
+----
+bash manifests/apply-openshell.sh
+----
+
+El script: CRDs + controller de *Agent Sandbox* (`agent-sandbox-system`) → proyecto `openshell` + SCC `anyuid` para el SA del gateway (la imagen corre como UID 1000 y no cabe en el rango de `restricted-v2`) → Helm chart oficial `oci://ghcr.io/nvidia/openshell/helm-chart` → wait del StatefulSet.
+
+Requisitos: K8s 1.29+ (OpenShift 4.20+ OK), Helm 3 y salida a `ghcr.io` / `registry.k8s.io`.
+
+== CLI y conexión al gateway
+
+El CLI `openshell` corre donde gestiones el lab: Web Terminal (Linux) o laptop (macOS Apple Silicon soportado).
+
+[source,bash]
+----
+curl -LsSf https://raw.githubusercontent.com/NVIDIA/OpenShell/main/install.sh | sh
+----
+
+Conexión por port-forward + bundle mTLS (evaluación local):
+
+[source,bash]
+----
+kubectl -n openshell port-forward svc/openshell 8080:8080 &
+
+mkdir -p ~/.config/openshell/gateways/k8s/mtls
+kubectl -n openshell get secret openshell-client-tls \
+  -o jsonpath='{.data.ca\.crt}'  | base64 -d > ~/.config/openshell/gateways/k8s/mtls/ca.crt
+kubectl -n openshell get secret openshell-client-tls \
+  -o jsonpath='{.data.tls\.crt}' | base64 -d > ~/.config/openshell/gateways/k8s/mtls/tls.crt
+kubectl -n openshell get secret openshell-client-tls \
+  -o jsonpath='{.data.tls\.key}' | base64 -d > ~/.config/openshell/gateways/k8s/mtls/tls.key
+
+openshell gateway add https://127.0.0.1:8080 --local --name k8s
+openshell status
+----
+
+`openshell status` debe listar el gateway `k8s` como reachable.
+
+Alternativa en OpenShift: exponer el gateway con Route TLS passthrough (`openshiftRoute.enabled=true` + host en SAN vía `pkiInitJob.serverDnsNames`); para el lab basta el port-forward.
+
+== Hola-mundo con OpenRouter (quickstart)
+
+El quickstart oficial: OpenCode en un sandbox con acceso de mínimo privilegio a `openrouter.ai`. Necesitas una API key de OpenRouter (hay modelos free).
+
+[source,bash]
+----
+export OPENROUTER_API_KEY=sk-or-...
+
+openshell profile import \
+  --url https://raw.githubusercontent.com/NVIDIA/OpenShell/main/providers/openrouter.yaml
+openshell provider create --name openrouter --type openrouter --from-existing
+
+openshell sandbox create \
+  --name demo \
+  --from ghcr.io/anomalyco/opencode:latest \
+  --provider openrouter \
+  -- opencode -m openrouter/nvidia/nemotron-3.5-lightning:free
+----
+
+Cuando el agente toca algo que la política no permite, OpenShell deniega la petición y redacta una regla para ella. La apruebas desde el host:
+
+[source,bash]
+----
+openshell rule get demo --status pending
+openshell rule approve demo --chunk-id <chunk-id>   # o reject --reason "..."
+----
+
+Las reglas aprobadas hacen hot-reload sin reiniciar el sandbox.
+
+== Avanzado — provider MaaS del cluster
+
+Lo valioso del lab: el agente consume el *MaaS del propio cluster* (llm-d, xref:10-00-verify.adoc[módulo 10]) con la API key fuera del agente. MaaS es OpenAI-compatible, pero OpenShell no reutiliza el profile `openai` para un host arbitrario: importa un *profile propio* que declara `maas.<domain>`, la credencial `MAAS_API_KEY` y los binarios permitidos (fuente: `manifests/openshell/maas-provider-profile.yaml`).
+
+[source,bash]
+----
+CLUSTER_DOMAIN=$(oc get ingresses.config/cluster -o jsonpath='{.spec.domain}')
+sed "s|__CLUSTER_DOMAIN__|${CLUSTER_DOMAIN}|" \
+  manifests/openshell/maas-provider-profile.yaml > /tmp/maas-profile.yaml
+
+openshell profile lint   -f /tmp/maas-profile.yaml
+openshell profile import -f /tmp/maas-profile.yaml
+
+export MAAS_API_KEY=sk-oai-...   # del módulo 10
+openshell provider create --name maas --type maas --from-existing
+----
+
+Smoke test con curl dentro del sandbox. La key va como referencia `$MAAS_API_KEY`, *sin expandir en el host*: el placeholder viaja en el env del sandbox y el proxy lo resuelve solo porque destino y binario están en el profile.
+
+[source,bash]
+----
+openshell sandbox create \
+  --name maas-smoke \
+  --from ghcr.io/anomalyco/opencode:latest \
+  --provider maas \
+  -- sh -c "curl -s https://maas.${CLUSTER_DOMAIN}/v1/models -H 'Authorization: Bearer \$MAAS_API_KEY'"
+----
+
+Debe listar los modelos publicados (Qwen3-0.6B, …). Un 403 `credential_endpoint_mismatch` significa que destino o binario no están en el profile: ese es el fail-closed de OpenShell.
+
+IMPORTANT: *Validado en lab (parcial)*: el profile `maas` y el provider se crean sin problemas, y la reescritura de placeholders funciona (probada con un endpoint que hace eco del header). Pero el smoke sandbox → `maas.<domain>` devuelve *401 sin auth* (no 403): el proxy no entrega el header `Authorization` a ese host, incluso con la key real sin placeholder. Patrón idéntico al issue https://github.com/NVIDIA/OpenShell/issues/2161[#2161] de OpenShell (fallo de rewrite host-específico). Pendiente de fix upstream; ver GAP.
+
+Para un agente OpenCode completo contra MaaS: build de una variante con `opencode.jsonc` de MaaS (base `manifests/agents/opencode/`) + pull secret en `openshell` (`server.sandboxImagePullSecrets`). WIP; el smoke de curl cubre el valor del lab.
+
+== Verificar
+
+[source,bash]
+----
+oc -n agent-sandbox-system get pods
+oc -n openshell get pods
+openshell status
+openshell provider list
+openshell sandbox list
+----
+
+* Gateway `openshell` Ready y `openshell status` reachable
+* Providers `openrouter` / `maas` listados (solo keys, nunca valores)
+* Sandbox `demo` / `maas-smoke` corriendo con su supervisor
+
+Audit trail: cada allow/deny queda registrado en el supervisor; consulta con `oc -n openshell logs -l app.kubernetes.io/name=os-supervisor` (el subcomando `sandbox logs` no existe aún en 0.1.2).
+
+== GAP
+
+* OpenShell es agnóstico a RHOAI: no aparece en el dashboard ni en *AI asset endpoints*. El valor del lab es el runtime + audit trail, no la UI.
+* El gateway del lab corre con `allowUnauthenticatedUsers` (port-forward local); en Prd: OIDC o access proxy.
+* OpenCode completo contra MaaS en sandbox requiere imagen propia + pull secret (WIP).
+* **Rewrite a `maas.<domain>` no funciona en lab**: la política (NET + L7) permite la petición y la reescritura de placeholders funciona para otros hosts, pero el header `Authorization` no llega a MaaS (401 sin auth, incluso con la key real sin placeholder). Diagnóstico: la key funciona desde pods planos (HTTP/1.1 y HTTP/2, cualquier IP del ELB), las IPs del DNS (2× `100.x` + 1 AWS) responden 200, y el mismo profile con otro host reescribe bien. Fallo host-específico; reportar upstream con este diagnóstico.

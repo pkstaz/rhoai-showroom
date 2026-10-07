@@ -27,6 +27,8 @@
 * xref:11-00-observabilidad.adoc[11. Observabilidad MaaS]
 * xref:12-00-evalhub.adoc[12. EvalHub (WIP)]
 ** xref:12-01-garak.adoc[Garak y red team (WIP)]
+** xref:12-02-mlflow.adoc[MLflow: auditoría y trazas (WIP)]
+** xref:12-03-evals-gpu.adoc[Evals GPU: Context-aware + OWASP (WIP)]
 * xref:13-00-finops.adoc[13. FinOps y cuotas (WIP)]
 * xref:14-00-guardrails.adoc[14. Guardrails (WIP)]
 ** xref:14-01-guardrails-cpu.adoc[CPU — Presidio / regex (WIP)]
@@ -39,3 +41,4 @@
 * xref:20-00-mcp.adoc[20. MCP Catalog (WIP)]
 * xref:21-00-agentops.adoc[21. AgentOps (WIP)]
 * xref:22-00-skills.adoc[22. Skills Plugin (WIP)]
+* xref:23-00-openshell.adoc[23. OpenShell (WIP)]
