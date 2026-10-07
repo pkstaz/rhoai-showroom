@@ -17,8 +17,8 @@ data:
         regex_detection:
           input:
             patterns:
-              - "\\\\b(password|secret|api[_-]?key|token)\\\\b"
-              - "\\\\d{3}-\\\\d{2}-\\\\d{4}"
+              - '\b(password|secret|api[_-]?key|token)\b'
+              - '\d{3}-\d{2}-\d{4}'
             case_insensitive: true
       input:
         flows:

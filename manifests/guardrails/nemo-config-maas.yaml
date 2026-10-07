@@ -1,5 +1,6 @@
 # Optional: NeMo as OpenAI-compatible proxy in front of MaaS Qwen.
-# apply-guardrails.sh MODE=maas fills openai_api_base + OPENAI_API_KEY.
+# apply-guardrails.sh MODE=maas fills base_url + OPENAI_API_KEY.
+# base_url (not openai_api_base): the 0.21 LangChain name fails the migration check.
 # Placeholders below are replaced by the script; do not apply this file raw.
 apiVersion: v1
 kind: ConfigMap
@@ -12,7 +13,7 @@ data:
       - type: main
         engine: openai
         parameters:
-          openai_api_base: "MAAS_V1_URL"
+          base_url: "MAAS_V1_URL"
           model_name: "MODEL_ID"
     rails:
       config:
@@ -28,7 +29,7 @@ data:
         regex_detection:
           input:
             patterns:
-              - "\\\\b(password|secret|api[_-]?key|token)\\\\b"
+              - '\b(password|secret|api[_-]?key|token)\b'
             case_insensitive: true
       input:
         flows:
