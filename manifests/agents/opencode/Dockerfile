@@ -10,7 +10,7 @@ ENV HOME=/tmp
 
 WORKDIR /opt/app
 
-RUN npm install opencode-ai@latest --no-audit --no-fund \
+RUN npm install opencode-ai@latest @mlflow/opencode@latest @mlflow/core@latest --no-audit --no-fund \
     && ./node_modules/.bin/opencode --version
 
 EXPOSE 4096

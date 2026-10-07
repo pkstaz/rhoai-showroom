@@ -15,6 +15,7 @@ data:
       "$schema": "https://opencode.ai/config.json",
       "model": "maas/glm-53-flash",
       "small_model": "maas/glm-53-flash",
+      "plugin": ["@mlflow/opencode"],
       "provider": {
         "maas": {
           "npm": "@ai-sdk/openai-compatible",
@@ -89,6 +90,16 @@ spec:
                   name: opencode-maas-key-__USER__
                   key: MAAS_API_KEY
                   optional: true
+            - name: MLFLOW_TRACKING_URI
+              value: https://mlflow.redhat-ods-applications.svc:8443/mlflow
+            - name: MLFLOW_EXPERIMENT_ID
+              value: "__MLFLOW_EXPERIMENT_ID__"
+            - name: MLFLOW_TRACKING_AUTH
+              value: kubernetes
+            - name: MLFLOW_WORKSPACE
+              value: llm
+            - name: NODE_EXTRA_CA_CERTS
+              value: /var/run/secrets/kubernetes.io/serviceaccount/service-ca.crt
           volumeMounts:
             - name: config
               mountPath: /opt/opencode-config

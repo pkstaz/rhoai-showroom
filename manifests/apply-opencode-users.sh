@@ -23,6 +23,12 @@ APP=opencode-agent
 IMAGE="image-registry.openshift-image-registry.svc:5000/${NS}/${APP}:latest"
 CLUSTER_DOMAIN=$(oc get ingresses.config/cluster -o jsonpath='{.spec.domain}')
 
+# Experimento MLflow de las sesiones de los agentes (workspace llm). Best-effort:
+# si MLflow no está desplegado, el SA no tiene RBAC en llm o el experimento no
+# existe, el agente arranca sin tracing. apply-opencode-tracing.sh lo crea y
+# fuerza el experiment ID.
+MLFLOW_EXPERIMENT_ID="${MLFLOW_EXPERIMENT_ID:-$(T=$(oc -n "$NS" create token "${APP}" --duration=10m 2>/dev/null || true); oc exec -n redhat-ods-applications deploy/mlflow -- sh -c 'curl -sk -H "Authorization: Bearer '"$T"'" -H "X-MLFLOW-WORKSPACE: llm" "https://localhost:8443/mlflow/api/2.0/mlflow/experiments/get-by-name?experiment_name=agent-sessions"' 2>/dev/null | grep -oE '"experiment_id": *"[0-9]+"' | grep -oE '[0-9]+' || true)}"
+
 oc get ns "$NS" >/dev/null
 
 echo "=== ServiceAccount compartido (${NS}/opencode-agent) ==="
@@ -46,6 +52,7 @@ for U in $USERS; do
   echo "=== Agente opencode-${U} ==="
   tmp=$(mktemp)
   sed -e "s|__USER__|${U}|g" -e "s|__IMAGE__|${IMAGE}|g" -e "s|__CLUSTER_DOMAIN__|${CLUSTER_DOMAIN}|g" \
+    -e "s|__MLFLOW_EXPERIMENT_ID__|${MLFLOW_EXPERIMENT_ID}|g" \
     manifests/agents/opencode-users-template.yaml > "$tmp"
   oc -n "$NS" apply -f "$tmp"
   rm -f "$tmp"
