@@ -26,7 +26,7 @@ import {
 } from '@patternfly/react-icons';
 import type { FC } from 'react';
 import { useEffect, useState } from 'react';
-import { BUNDLE_JSON, BUNDLE_CHART_VERSION } from './bundle';
+import { BUNDLE_JSON, BUNDLE_CHART_VERSION, RBAC_JSON } from './bundle';
 
 type K8sObj = Record<string, any>;
 
@@ -53,6 +53,9 @@ const models: Record<string, Model> = {
   Job: { abbr: 'j', kind: 'Job', label: 'Job', labelPlural: 'Jobs', plural: 'jobs', apiVersion: 'v1', apiGroup: 'batch', namespaced: true },
   Route: { abbr: 'rt', kind: 'Route', label: 'Route', labelPlural: 'Routes', plural: 'routes', apiVersion: 'v1', apiGroup: 'route.openshift.io', namespaced: true },
   Pod: { abbr: 'p', kind: 'Pod', label: 'Pod', labelPlural: 'Pods', plural: 'pods', apiVersion: 'v1', namespaced: true },
+  Namespace: { abbr: 'ns', kind: 'Namespace', label: 'Namespace', labelPlural: 'Namespaces', plural: 'namespaces', apiVersion: 'v1', namespaced: false },
+  ClusterRole: { abbr: 'cr', kind: 'ClusterRole', label: 'ClusterRole', labelPlural: 'ClusterRoles', plural: 'clusterroles', apiVersion: 'v1', apiGroup: 'rbac.authorization.k8s.io', namespaced: false },
+  ClusterRoleBinding: { abbr: 'crb', kind: 'ClusterRoleBinding', label: 'ClusterRoleBinding', labelPlural: 'ClusterRoleBindings', plural: 'clusterrolebindings', apiVersion: 'v1', apiGroup: 'rbac.authorization.k8s.io', namespaced: false },
 };
 
 const userModel: Model = {
@@ -67,7 +70,7 @@ const ingressModel: Model = {
 
 const modelFor = (doc: K8sObj): Model => models[doc.kind];
 
-const Overview: FC<{ ns: string }> = ({ ns }) => {
+const Overview: FC<{ ns: string; user: string }> = ({ ns, user }) => {
   const [sts, stsLoaded, stsErr] = useK8sWatchResource<K8sObj>({
     groupVersionKind: { group: 'apps', version: 'v1', kind: 'StatefulSet' },
     namespace: ns,
@@ -116,9 +119,47 @@ const Overview: FC<{ ns: string }> = ({ ns }) => {
     setMsg(null);
     setErr(null);
     try {
+      // 1. Namespace (auto-provisioning si el usuario puede crearlo; si no,
+      // mensaje claro de provisioning).
+      let nsExists = true;
+      try {
+        await k8sGet({ model: models.Namespace, name: ns } as never);
+      } catch (e) {
+        const s = String(e);
+        if (s.includes('404') || s.toLowerCase().includes('not found')) {
+          nsExists = false;
+        } else {
+          throw e;
+        }
+      }
+      if (!nsExists) {
+        try {
+          await k8sCreate({ model: models.Namespace, data: { apiVersion: 'v1', kind: 'Namespace', metadata: { name: ns } } } as never);
+        } catch {
+          throw new Error(
+            `Tu namespace ${ns} no existe y no puedes crearlo. Pide el provisioning a un admin con manifests/apply-openshell-users.sh (USERS=<tu usuario>)`,
+          );
+        }
+      }
+      // 2. RBAC por usuario (ClusterRole node-reader cluster-scoped + RoleBindings).
+      // AlreadyExists o Forbidden se ignoran: para no-admins ya lo crea el
+      // provisioning; para admins el plugin se auto-provisiona.
+      const rbacDocs: K8sObj[] = JSON.parse(RBAC_JSON.split('__NS__').join(ns).split('__USER__').join(user));
+      for (const doc of rbacDocs) {
+        try {
+          if (doc.kind === 'Role' || doc.kind === 'RoleBinding') {
+            await k8sCreate({ model: modelFor(doc), data: doc, ns } as never);
+          } else {
+            await k8sCreate({ model: modelFor(doc), data: doc } as never);
+          }
+        } catch {
+          // AlreadyExists / Forbidden: continúa
+        }
+      }
+      // 3. Bundle del chart oficial (gateway + Route pública).
       const domain = await clusterDomain();
       const host = `openshell-${ns}.${domain}`;
-      const docs: K8sObj[] = JSON.parse(BUNDLE_JSON.split("__NS__").join(ns).split("__HOST__").join(host));
+      const docs: K8sObj[] = JSON.parse(BUNDLE_JSON.split('__NS__').join(ns).split('__HOST__').join(host));
       const ordered = docs.filter((d) => d.kind === 'Job').concat(docs.filter((d) => d.kind !== 'Job'));
       let created = 0;
       const fails: string[] = [];
@@ -328,7 +369,7 @@ const OpenShellPage: FC = () => {
       ) : !user ? (
         <PageSection><Spinner size="lg" /></PageSection>
       ) : (
-        <Overview ns={`openshell-${user}`} />
+        <Overview ns={`openshell-${user}`} user={user} />
       )}
     </>
   );

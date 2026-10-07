@@ -153,6 +153,10 @@ else
 fi
 
 oc -n "$NS" rollout status "deploy/${APP}" --timeout=300s || true
+# El tag de imagen es :latest y el pod spec no cambia entre builds: fuerza el
+# rollout para que el console sirva el dist nuevo.
+oc -n "$NS" rollout restart "deploy/${APP}" 2>/dev/null || true
+oc -n "$NS" rollout status "deploy/${APP}" --timeout=300s || true
 echo
 echo "Hard refresh del console (Ctrl+Shift+R). Menu OpenCode → Manager."
 oc -n "$NS" get pods,consoleplugin -l app=${PLUGIN} 2>/dev/null || oc get consoleplugin ${PLUGIN}
