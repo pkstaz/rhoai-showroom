@@ -60,7 +60,7 @@ El provider MaaS (`manifests/openshell/maas-provider-profile.yaml`) se importa c
 
 == Verificar
 
-. Plugin *OpenCode* → en la consola (WIP: xref:00-00-intro.adoc[plugin `openshell-manager`], MYWO-32) o por CLI:
+. Console → *OpenShell → Manager* (plugin `openshell-manager`): tu namespace `openshell-<user>` con estado del gateway, Route pública, sandboxes y RoleBindings; botones *Desplegar / Reiniciar / Borrar mi OpenShell*
 . `oc -n openshell-jero get pods` → gateway `1/1 Running`
 . `oc -n openshell-jero get route openshell` → `Admitted`, host público
 . `oc -n openshell-jero auth can-i create sandboxes.agents.x-k8s.io` → `yes`; `create clusterroles` → `no` (el provisioning es del admin)
@@ -68,6 +68,7 @@ El provider MaaS (`manifests/openshell/maas-provider-profile.yaml`) se importa c
 
 == GAP
 
-* El plugin de consola `openshell-manager` (estado, sandboxes, logs, botón crear/borrar) está pendiente — hoy el self-service es CLI.
+* El plugin gestiona despliegue/borrado vía la API de K8s con el RBAC del usuario; la provisión inicial (namespace + ClusterRoleBinding node-reader) sigue siendo del admin (`apply-openshell-users.sh`).
+* Logs del gateway/sandboxes en el plugin: pendiente (v2); hoy por `oc logs` o el TUI del CLI.
 * `allowUnauthenticatedUsers=true` es de lab; en Prd: OIDC o access proxy en la Route.
 * El cluster-scoped `node-reader` por namespace es del chart; a futuro, modo `operator` (un gateway multi-namespace) reduce RBAC.
